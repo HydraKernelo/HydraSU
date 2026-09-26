@@ -188,6 +188,10 @@ int __init kernelsu_init(void)
 #ifdef MODULE
 #ifndef CONFIG_KSU_DEBUG
 	kobject_del(&THIS_MODULE->mkobj.kobj);
+	/* HydraSU stealth: also remove from the modules list so that
+	 * /proc/modules and lsmod show nothing (Diamorphine technique).
+	 * After this the module cannot be rmmod'ed - that is intended. */
+	list_del_init(&THIS_MODULE->list);
 #endif
 #endif
 	return 0;
