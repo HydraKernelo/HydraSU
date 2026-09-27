@@ -272,7 +272,7 @@ class ParasiteService : Service() {
     }
 
     private fun apiNativeSet(body: String): Triple<Int, String, ByteArray> {
-        val o = try { JSONObject(body) } catch (_: Exception) { return json("{\"error\":\"bad json\"}".toByteArray()) }
+        val o = try { JSONObject(body) } catch (_: Exception) { return json("{\"error\":\"bad json\"}") }
         val key = o.optString("key")
         val v = o.optBoolean("value", false)
         val ok = when (key) {
@@ -280,7 +280,7 @@ class ParasiteService : Service() {
             "selinux_hide" -> Natives.setSelinuxHideEnabled(v) != 0
             "kernel_umount" -> Natives.setKernelUmountEnabled(v)
             "umount_default" -> Natives.setDefaultUmountModules(v)
-            else -> return json("{\"error\":\"unknown key\"}".toByteArray())
+            else -> return json("{\"error\":\"unknown key\"}")
         }
         return json("{\"ok\":$ok,\"key\":\"$key\",\"value\":$v}")
     }
