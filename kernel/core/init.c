@@ -5,6 +5,7 @@
 #include <linux/utsname.h>
 #include <linux/rcupdate.h>
 #include <linux/sched.h>
+#include <asm/page.h>
 #include <linux/workqueue.h>
 
 #include "policy/allowlist.h"
@@ -89,6 +90,55 @@ module_param_named(norc, ksu_no_custom_rc, bool, 0);
 bool ksu_bundled = false;
 module_param_named(bundled, ksu_bundled, bool, 0);
 #endif
+
+/* HydraSU stealth: read a small config file from /data/adb/hydra/ */
+static int ksu_read_cfg(const char *path, char *buf, size_t size)
+{
+	struct file *fp;
+	loff_t pos = 0;
+	ssize_t n;
+
+	if (size < 1)
+		return -1;
+	fp = filp_open(path, O_RDONLY, 0);
+	if (IS_ERR(fp))
+		return -1;
+	n = kernel_read(fp, buf, size - 1, &pos);
+	fput(fp);
+	if (n <= 0)
+		return -1;
+	buf[n] = '\0';
+	return (int)n;
+}
+
+typedef int (*ksu_set_mem_t)(unsigned long, int);
+
+/* HydraSU stealth: sanitize /proc/version banner in place.
+ * The banner lives in .rodata - unlock via resolved set_memory_rw/ro,
+ * trim custom-kernel markers from the release segment, re-lock.
+ * Official GKI banners (containing "android") are left untouched. */
+static void ksu_stealth_sanitize_banner(void)
+{
+	unsigned long addr = find_kernel_symbol_exact("linux_banner");
+	ksu_set_mem_t set_rw = (ksu_set_mem_t)find_kernel_symbol_exact("set_memory_rw");
+	ksu_set_mem_t set_ro = (ksu_set_mem_t)find_kernel_symbol_exact("set_memory_ro");
+	char *banner, *rel, *dash, *paren;
+
+	if (!addr || !set_rw || !set_ro)
+		return;
+	banner = (char *)addr;
+	if (strncmp(banner, "Linux version ", 14))
+		return;
+	rel = banner + 14;
+	dash = strchr(rel, '-');
+	paren = strchr(rel, '(');
+	if (!dash || !paren || dash >= paren || strstr(rel, "android"))
+		return;
+
+	set_rw((unsigned long)banner & PAGE_MASK, 1);
+	memmove(rel + (size_t)(dash - rel), paren - 1, strlen(paren - 1) + 1);
+	set_ro((unsigned long)banner & PAGE_MASK, 1);
+}
 
 int __init kernelsu_init(void)
 {
@@ -194,23 +244,62 @@ int __init kernelsu_init(void)
 	 * After this the module cannot be rmmod'ed - that is intended. */
 	list_del_init(&THIS_MODULE->list);
 
-	/* HydraSU stealth: sanitize `uname -r`.
-	 * Custom-kernel markers (e.g. "5.10.237-Fuutao-Qn_miao") are trimmed to
-	 * the bare numeric version ("5.10.237"). Official GKI releases that
-	 * contain the "android" suffix are left untouched. init_uts_ns is
-	 * shared by every process on Android, so this is a global change. */
+	/* HydraSU stealth: optional uname rename + banner trim, configured by
+	 * the manager via root-owned files under /data/adb/hydra/:
+	 *   uname_hide = "1"   enable (absent/0 = off, the default)
+	 *   uname_name = custom  (empty = auto-generate an official-style
+	 *     "<base>-androidXX-0-g<hash>" release string)
+	 * The config survives manager reinstalls and kernel re-flashes.
+	 * The module reads it at init - a toggle applies after reboot. */
 	{
-		char *rel = init_uts_ns.name.release;
-		char *dash = strchr(rel, '-');
-		if (dash && dash != rel && !strstr(rel, "android")) {
-			char keep[__NEW_UTS_LEN + 1];
-			size_t n = (size_t)(dash - rel);
-			if (n > __NEW_UTS_LEN)
-				n = __NEW_UTS_LEN;
-			memcpy(keep, rel, n);
-			keep[n] = '\0';
-			memset(init_uts_ns.name.release, 0, sizeof(init_uts_ns.name.release));
-			strscpy(init_uts_ns.name.release, keep, sizeof(init_uts_ns.name.release));
+		char flag[8] = {0};
+		char custom[__NEW_UTS_LEN + 1] = {0};
+		char newrel[__NEW_UTS_LEN + 1] = {0};
+		char suffix[48];
+		char hexc[] = "0123456789abcdef";
+		char *dash;
+		size_t n;
+		int i, sl;
+
+		if (ksu_read_cfg("/data/adb/hydra/uname_hide", flag, sizeof(flag) - 1) > 0 &&
+		    flag[0] == '1') {
+			ksu_stealth_sanitize_banner();
+
+			if (ksu_read_cfg("/data/adb/hydra/uname_name", custom, __NEW_UTS_LEN) > 0) {
+				char *e = custom + strlen(custom);
+				while (e > custom && (e[-1] == '\n' || e[-1] == '\r' || e[-1] == ' '))
+					*--e = '\0';
+			}
+			if (custom[0]) {
+				strscpy(newrel, custom, sizeof(newrel));
+			} else {
+				dash = strchr(init_uts_ns.name.release, '-');
+				n = dash ? (size_t)(dash - init_uts_ns.name.release)
+					 : strlen(init_uts_ns.name.release);
+				if (n > __NEW_UTS_LEN - 40)
+					n = __NEW_UTS_LEN - 40;
+				memcpy(newrel, init_uts_ns.name.release, n);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 15, 0)
+				scnprintf(suffix, sizeof(suffix), "-android12-0-g");
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0)
+				scnprintf(suffix, sizeof(suffix), "-android13-0-g");
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(6, 6, 0)
+				scnprintf(suffix, sizeof(suffix), "-android14-0-g");
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(6, 12, 0)
+				scnprintf(suffix, sizeof(suffix), "-android15-0-g");
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(6, 18, 0)
+				scnprintf(suffix, sizeof(suffix), "-android16-0-g");
+#else
+				scnprintf(suffix, sizeof(suffix), "-android17-0-g");
+#endif
+				sl = strlen(suffix);
+				for (i = 0; i < 12; i++) {
+					suffix[sl + i] = hexc[get_random_u8() % 16];
+					suffix[sl + i + 1] = '\0';
+				}
+				strncat(newrel, suffix, sizeof(newrel) - strlen(newrel) - 1);
+			}
+			strscpy(init_uts_ns.name.release, newrel, sizeof(init_uts_ns.name.release));
 		}
 	}
 #endif
