@@ -284,8 +284,8 @@ class ParasiteService : Service() {
             val kv = it.split("=", limit = 2)
             if (kv.size == 2) kv[0] to kv[1] else null
         }.toMap()
-        val pkg = params["pkg"] ?: return Triple(400, "application/json", "{"error":"no pkg"}".toByteArray())
-        if (params["token"] != token) return Triple(401, "application/json", "{"error":"unauthorized"}".toByteArray())
+        val pkg = params["pkg"] ?: return Triple(400, "application/json", "{\"error\":\"no pkg\"}".toByteArray())
+        if (params["token"] != token) return Triple(401, "application/json", "{\"error\":\"unauthorized\"}".toByteArray())
         return try {
             val ai = packageManager.getApplicationInfo(pkg, 0)
             val d = packageManager.getApplicationIcon(ai)
@@ -297,7 +297,7 @@ class ParasiteService : Service() {
             bmp.compress(Bitmap.CompressFormat.PNG, 90, bo)
             Triple(200, "image/png", bo.toByteArray())
         } catch (_: Exception) {
-            Triple(404, "application/json", "{"error":"not found"}".toByteArray())
+            Triple(404, "application/json", "{\"error\":\"not found\"}".toByteArray())
         }
     }
 
