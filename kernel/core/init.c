@@ -2,6 +2,7 @@
 #include <linux/fs.h>
 #include <linux/kobject.h>
 #include <linux/module.h>
+#include <linux/utsname.h>
 #include <linux/rcupdate.h>
 #include <linux/sched.h>
 #include <linux/workqueue.h>
@@ -192,6 +193,26 @@ int __init kernelsu_init(void)
 	 * /proc/modules and lsmod show nothing (Diamorphine technique).
 	 * After this the module cannot be rmmod'ed - that is intended. */
 	list_del_init(&THIS_MODULE->list);
+
+	/* HydraSU stealth: sanitize `uname -r`.
+	 * Custom-kernel markers (e.g. "5.10.237-Fuutao-Qn_miao") are trimmed to
+	 * the bare numeric version ("5.10.237"). Official GKI releases that
+	 * contain the "android" suffix are left untouched. init_uts_ns is
+	 * shared by every process on Android, so this is a global change. */
+	{
+		char *rel = init_uts_ns.name.release;
+		char *dash = strchr(rel, '-');
+		if (dash && dash != rel && !strstr(rel, "android")) {
+			char keep[__NEW_UTS_LEN + 1];
+			size_t n = (size_t)(dash - rel);
+			if (n > __NEW_UTS_LEN)
+				n = __NEW_UTS_LEN;
+			memcpy(keep, rel, n);
+			keep[n] = '\0';
+			memset(init_uts_ns.name.release, 0, sizeof(init_uts_ns.name.release));
+			strscpy(init_uts_ns.name.release, keep, sizeof(init_uts_ns.name.release));
+		}
+	}
 #endif
 #endif
 	return 0;
