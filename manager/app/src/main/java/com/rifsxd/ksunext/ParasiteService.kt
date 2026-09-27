@@ -125,9 +125,10 @@ class ParasiteService : Service() {
                 if (lower.startsWith("x-token:")) reqToken = h.substringAfter(":").trim()
             }
 
-            // 鉴权：除静态资源外全部需要 token
+            // 鉴权：header 或 query 均可（query 用于 <img> 标签）
+            val queryToken = pathQ.substringAfter("token=", "").substringBefore("&")
             val needsAuth = path.startsWith("/api/")
-            if (needsAuth && reqToken != token) {
+            if (needsAuth && reqToken != token && queryToken != token) {
                 respond(s, 401, "application/json", """{"error":"unauthorized"}""".toByteArray())
                 return
             }
