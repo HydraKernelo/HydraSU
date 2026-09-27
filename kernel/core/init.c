@@ -294,11 +294,9 @@ int __init kernelsu_init(void)
 #endif
 				sl = strlen(suffix);
 				for (i = 0; i < 12; i++) {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0)
-					suffix[sl + i] = hexc[get_random_u32() % 16];
-#else
-					suffix[sl + i] = hexc[prandom_u32() % 16];
-#endif
+					u8 rb;
+					get_random_bytes(&rb, 1);
+					suffix[sl + i] = hexc[rb % 16];
 					suffix[sl + i + 1] = '\0';
 				}
 				strncat(newrel, suffix, sizeof(newrel) - strlen(newrel) - 1);
