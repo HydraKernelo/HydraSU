@@ -69,6 +69,16 @@
                 <data android:scheme="android_secret_code" android:host="38214" />
             </intent-filter>
         </activity-alias>
+
+        <!-- 拨号盘暗码广播接收（部分 ROM 只发广播，需 Receiver 接） -->
+        <receiver
+            android:name=".SecretCodeReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SECRET_CODE" />
+                <data android:scheme="android_secret_code" android:host="38214" />
+            </intent-filter>
+        </receiver>
         
         <!-- Single entry point for opening zip files: the zip kind (module or
              AnyKernel3) is auto-detected in MainActivity -->
