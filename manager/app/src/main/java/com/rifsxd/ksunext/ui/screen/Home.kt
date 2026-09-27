@@ -1253,46 +1253,61 @@ data class Contributor(
     val name: String? = null,
     val githubUrl: String,
     val role: String,
-    val donationUrl: String
+    val donationUrl: String,
+    val avatarRes: Int? = null
 )
 
 @Composable
 fun ContributorsCard() {
     val uriHandler = LocalUriHandler.current
 
-    val contributors = listOf(
-        Contributor(
-            login = "rifsxd",
-            name = "Rifat Azad",
-            githubUrl = "https://github.com/rifsxd",
-            role = "Lead Developer",
-            donationUrl = "https://github.com/KernelSU-Next/KernelSU-Next/tree/dev?tab=readme-ov-file#-donations"
+    val contributorGroups = listOf(
+        "HydraSU" to listOf(
+            Contributor(
+                login = "HydraKernelo",
+                name = "HydraKernel",
+                githubUrl = "https://github.com/HydraKernelo",
+                role = "HydraSU Maintainer",
+                donationUrl = "https://github.com/HydraKernelo",
+                avatarRes = R.drawable.hydra_avatar
+            )
         ),
-        Contributor(
-            login = "tiann",
-            name = "Weishu",
-            githubUrl = "https://github.com/tiann",
-            role = "KernelSU Author",
-            donationUrl = "https://www.patreon.com/weishu"
+        "KernelSU-Next" to listOf(
+            Contributor(
+                login = "rifsxd",
+                name = "Rifat Azad",
+                githubUrl = "https://github.com/rifsxd",
+                role = "Lead Developer",
+                donationUrl = "https://github.com/KernelSU-Next/KernelSU-Next/tree/dev?tab=readme-ov-file#-donations"
+            ),
+            Contributor(
+                login = "fatalcoder524",
+                githubUrl = "https://github.com/fatalcoder524",
+                role = "Frontend Maintainer",
+                donationUrl = "https://github.com/sponsors/fatalcoder524"
+            ),
+            Contributor(
+                login = "pershoot",
+                githubUrl = "https://github.com/pershoot",
+                role = "Backend Maintainer",
+                donationUrl = "https://github.com/sponsors/pershoot"
+            ),
+            Contributor(
+                login = "maxsteeel",
+                name = "Max",
+                githubUrl = "https://github.com/maxsteeel",
+                role = "Legacy Maintainer",
+                donationUrl = "https://github.com/sponsors/maxsteeel"
+            )
         ),
-        Contributor(
-            login = "fatalcoder524",
-            githubUrl = "https://github.com/fatalcoder524",
-            role = "Frontend Maintainer",
-            donationUrl = "https://github.com/sponsors/fatalcoder524"
-        ),
-        Contributor(
-            login = "pershoot",
-            githubUrl = "https://github.com/pershoot",
-            role = "Backend Maintainer",
-            donationUrl = "https://github.com/sponsors/pershoot"
-        ),
-        Contributor(
-            login = "maxsteeel",
-            name = "Max",
-            githubUrl = "https://github.com/maxsteeel",
-            role = "Legacy Maintainer",
-            donationUrl = "https://github.com/sponsors/maxsteeel"
+        "KernelSU 原版" to listOf(
+            Contributor(
+                login = "tiann",
+                name = "Weishu",
+                githubUrl = "https://github.com/tiann",
+                role = "KernelSU Author",
+                donationUrl = "https://www.patreon.com/weishu"
+            )
         )
     )
 
@@ -1309,12 +1324,21 @@ fun ContributorsCard() {
                 fontWeight = FontWeight.SemiBold
             )
 
-            contributors.forEach { contributor ->
-                ContributorRow(
-                    contributor = contributor,
-                    onProfileClick = { uriHandler.openUri(contributor.githubUrl) },
-                    onDonateClick = { uriHandler.openUri(contributor.donationUrl) }
+            contributorGroups.forEach { (group, list) ->
+                Text(
+                    text = group,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(top = 6.dp)
                 )
+                list.forEach { contributor ->
+                    ContributorRow(
+                        contributor = contributor,
+                        onProfileClick = { uriHandler.openUri(contributor.githubUrl) },
+                        onDonateClick = { uriHandler.openUri(contributor.donationUrl) }
+                    )
+                }
             }
         }
     }
@@ -1355,7 +1379,14 @@ private fun ContributorRow(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                if (!imageLoadFailed) {
+                if (contributor.avatarRes != null) {
+                    Image(
+                        painter = painterResource(contributor.avatarRes),
+                        contentDescription = contributor.login,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else if (!imageLoadFailed) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data("https://avatars.githubusercontent.com/${contributor.login}?s=80")
