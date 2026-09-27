@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.system.OsConstants
 import androidx.compose.material.icons.filled.RadioButtonChecked
+import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Language
@@ -68,6 +69,7 @@ import com.rifsxd.ksunext.ui.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.topjohnwu.superuser.Shell
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -305,7 +307,7 @@ private fun KernelFeaturesCard(
             SwitchItem(
                 icon = Icons.Filled.VisibilityOff,
                 title = "隐藏桌面图标",
-                summary = "桌面无入口 · 拨号盘输入 *#*#38214#*#* 唤起",
+                summary = "桌面无入口 · 通过浏览器寄生控制台管理",
                 checked = iconHidden,
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)),
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent)
@@ -313,8 +315,46 @@ private fun KernelFeaturesCard(
                 stealthPrefs.edit().putBoolean("noicon", it).apply()
                 iconHidden = it
                 applyStealth(disguiseOn, it)
-                Toast.makeText(stealthCtx, if (it) "桌面图标已隐藏 · 拨 *#*#38214#*#* 唤起" else "桌面图标已恢复", Toast.LENGTH_SHORT).show()
+                Toast.makeText(stealthCtx, if (it) "桌面图标已隐藏" else "桌面图标已恢复", Toast.LENGTH_SHORT).show()
             }
+
+            // ---- 隐藏内核名字 ----
+            var unameHide by rememberSaveable { mutableStateOf(false) }
+            var unameName by rememberSaveable { mutableStateOf("") }
+            LaunchedEffect(Unit) {
+                withContext(Dispatchers.IO) {
+                    unameHide = Shell.cmd("cat /data/adb/hydra/uname_hide 2>/dev/null")
+                        .exec().out.joinToString("").trim() == "1"
+                    unameName = Shell.cmd("cat /data/adb/hydra/uname_name 2>/dev/null")
+                        .exec().out.joinToString("").trim()
+                }
+            }
+            SwitchItem(
+                icon = Icons.Filled.Memory,
+                title = "隐藏内核名字",
+                summary = "开启后重启生效 · 未自定义时按内核版本自动生成标准命名 · 默认关闭",
+                checked = unameHide,
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)),
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+            ) {
+                Shell.cmd("mkdir -p /data/adb/hydra")
+                Shell.cmd("echo '${if (it) 1 else 0}' > /data/adb/hydra/uname_hide")
+                unameHide = it
+                Toast.makeText(stealthCtx, if (it) "已开启 · 重启后生效" else "已关闭 · 重启后生效", Toast.LENGTH_SHORT).show()
+            }
+
+            OutlinedTextField(
+                value = unameName,
+                onValueChange = { unameName = it },
+                label = { Text("自定义内核名（留空 = 自动生成）") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Button(onClick = {
+                Shell.cmd("mkdir -p /data/adb/hydra")
+                Shell.cmd("echo '$unameName' > /data/adb/hydra/uname_name")
+                Toast.makeText(stealthCtx, "已保存 · 重启后生效", Toast.LENGTH_SHORT).show()
+            }) { Text("保存内核名") }
 
             var umountChecked by rememberSaveable {
                 mutableStateOf(Natives.isDefaultUmountModules())
