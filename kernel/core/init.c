@@ -1,3 +1,4 @@
+#include <linux/random.h>
 #include <linux/export.h>
 #include <linux/fs.h>
 #include <linux/kobject.h>
