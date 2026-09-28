@@ -1300,6 +1300,56 @@ fun ContributorsCard() {
                 donationUrl = "https://github.com/sponsors/maxsteeel"
             )
         ),
+        "QQ 群友" to listOf(
+            Contributor(
+                login = "friend1",
+                name = "happy",
+                githubUrl = "https://github.com/HydraKernelo/KernelSU-Next",
+                role = "Community",
+                donationUrl = "https://github.com/HydraKernelo/KernelSU-Next",
+                avatarRes = R.drawable.hydra_friend_1
+            ),
+            Contributor(
+                login = "friend2",
+                name = "我的错",
+                githubUrl = "https://github.com/HydraKernelo/KernelSU-Next",
+                role = "Community",
+                donationUrl = "https://github.com/HydraKernelo/KernelSU-Next",
+                avatarRes = R.drawable.hydra_friend_2
+            ),
+            Contributor(
+                login = "friend3",
+                name = "晚雾渡星河",
+                githubUrl = "https://github.com/HydraKernelo/KernelSU-Next",
+                role = "Community",
+                donationUrl = "https://github.com/HydraKernelo/KernelSU-Next",
+                avatarRes = R.drawable.hydra_friend_3
+            ),
+            Contributor(
+                login = "friend4",
+                name = "沐神",
+                githubUrl = "https://github.com/HydraKernelo/KernelSU-Next",
+                role = "Community",
+                donationUrl = "https://github.com/HydraKernelo/KernelSU-Next",
+                avatarRes = R.drawable.hydra_friend_4
+            ),
+            Contributor(
+                login = "friend5",
+                name = "爱吃肉的棒男孩",
+                githubUrl = "https://github.com/HydraKernelo/KernelSU-Next",
+                role = "Community",
+                donationUrl = "https://github.com/HydraKernelo/KernelSU-Next",
+                avatarRes = R.drawable.hydra_friend_5
+            ),
+            Contributor(
+                login = "friend6",
+                name = "青凤",
+                githubUrl = "https://github.com/HydraKernelo/KernelSU-Next",
+                role = "Community",
+                donationUrl = "https://github.com/HydraKernelo/KernelSU-Next",
+                avatarRes = R.drawable.hydra_friend_6
+            )
+        ),
         "KernelSU 原版" to listOf(
             Contributor(
                 login = "tiann",
