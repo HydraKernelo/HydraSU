@@ -42,6 +42,7 @@ import com.rifsxd.ksunext.ui.LocalScrollState
 import com.rifsxd.ksunext.ui.rememberScrollConnection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -370,6 +371,65 @@ private fun KernelFeaturesCard(
                     if (okw) "已保存 · 重启后生效" else "写入失败（root shell 异常）",
                     Toast.LENGTH_LONG).show()
             }) { Text("保存内核名") }
+
+            // ---- 寄生控制台 Token ----
+            var hydraToken by rememberSaveable { mutableStateOf("") }
+            LaunchedEffect(Unit) {
+                withContext(Dispatchers.IO) {
+                    hydraToken = Shell.cmd("cat /data/adb/hydra/token 2>/dev/null")
+                        .exec().out.joinToString("").trim()
+                }
+            }
+            OutlinedTextField(
+                value = hydraToken,
+                onValueChange = { },
+                label = { Text("寄生控制台 Token（浏览器 127.0.0.1:38214）") },
+                singleLine = true,
+                readOnly = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Button(onClick = {
+                val cb = stealthCtx.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                cb.setPrimaryClip(android.content.ClipData.newPlainText("hydra_token", hydraToken))
+                Toast.makeText(stealthCtx, "Token 已复制到剪贴板", Toast.LENGTH_SHORT).show()
+            }) { Text("复制 Token") }
+
+            // ---- 环境检测 ----
+            var detectItems by rememberSaveable { mutableStateOf(listOf<Pair<String, Boolean>>()) }
+            var detectTick by rememberSaveable { mutableStateOf(0) }
+            LaunchedEffect(detectTick) {
+                if (detectTick > 0) {
+                    withContext(Dispatchers.IO) {
+                        val items = mutableListOf<Pair<String, Boolean>>()
+                        val idr = Shell.cmd("id").exec()
+                        items.add("root 可用" to (idr.code == 0 && idr.out.joinToString("").contains("uid=0")))
+                        items.add("lsmod 无 kernelsu" to (Shell.cmd("lsmod | grep -q kernelsu").exec().code != 0))
+                        items.add("/proc/modules 无痕迹" to (Shell.cmd("grep -q kernelsu /proc/modules").exec().code != 0))
+                        items.add("/sys/module/kernelsu 不存在" to (Shell.cmd("[ -d /sys/module/kernelsu ]").exec().code != 0))
+                        val vb = Shell.cmd("getprop ro.boot.verifiedbootstate").exec().out.joinToString("").trim()
+                        items.add("verifiedbootstate=green" to (vb == "green"))
+                        val se = Shell.cmd("getenforce").exec().out.joinToString("").trim()
+                        items.add("SELinux Enforcing" to (se == "Enforcing"))
+                        val dm = Shell.cmd("dmesg | grep -icE 'kernelsu|ksu_'").exec()
+                        items.add("dmesg 无痕迹" to (dm.out.joinToString("").trim().toIntOrNull() == 0))
+                        detectItems = items
+                    }
+                }
+            }
+            Column {
+                detectItems.forEach { (name, pass) ->
+                    Text(
+                        text = (if (pass) "✓ " else "✗ ") + name,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        color = if (pass) Color(0xFF69D99A) else Color(0xFFF87171),
+                        modifier = Modifier.padding(vertical = 2.dp)
+                    )
+                }
+            }
+            Button(onClick = { detectTick++ }, modifier = Modifier.fillMaxWidth()) {
+                Text("运行环境检测")
+            }
 
             if (!unameLoaded) {
                 Text(
