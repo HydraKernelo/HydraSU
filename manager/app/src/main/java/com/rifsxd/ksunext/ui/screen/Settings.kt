@@ -319,14 +319,27 @@ private fun KernelFeaturesCard(
             }
 
             // ---- 隐藏内核名字 ----
+            val cfgDir = "/data/adb/hydra"
+            fun readCfg(name: String): String =
+                Shell.cmd("cat $cfgDir/$name 2>/dev/null").exec().out.joinToString("").trim()
+
+            fun writeCfg(name: String, value: String): Boolean {
+                Shell.cmd("mkdir -p $cfgDir").exec()
+                Shell.cmd("echo '$value' > $cfgDir/$name").exec()
+                val back = Shell.cmd("cat $cfgDir/$name 2>/dev/null").exec().out.joinToString("").trim()
+                return back == value.trim()
+            }
+
             var unameHide by rememberSaveable { mutableStateOf(false) }
             var unameName by rememberSaveable { mutableStateOf("") }
+            var unameLoaded by rememberSaveable { mutableStateOf(false) }
             LaunchedEffect(Unit) {
                 withContext(Dispatchers.IO) {
-                    unameHide = Shell.cmd("cat /data/adb/hydra/uname_hide 2>/dev/null")
-                        .exec().out.joinToString("").trim() == "1"
-                    unameName = Shell.cmd("cat /data/adb/hydra/uname_name 2>/dev/null")
-                        .exec().out.joinToString("").trim()
+                    val h = readCfg("uname_hide")
+                    val n = readCfg("uname_name")
+                    unameHide = h == "1"
+                    unameName = n
+                    unameLoaded = true
                 }
             }
             SwitchItem(
@@ -337,10 +350,11 @@ private fun KernelFeaturesCard(
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)),
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent)
             ) {
-                Shell.cmd("mkdir -p /data/adb/hydra")
-                Shell.cmd("echo '${if (it) 1 else 0}' > /data/adb/hydra/uname_hide")
+                val okw = writeCfg("uname_hide", if (it) "1" else "0")
                 unameHide = it
-                Toast.makeText(stealthCtx, if (it) "已开启 · 重启后生效" else "已关闭 · 重启后生效", Toast.LENGTH_SHORT).show()
+                Toast.makeText(stealthCtx,
+                    if (okw) "已保存 · 重启后生效" else "写入 /data/adb/hydra 失败（root shell 异常）",
+                    Toast.LENGTH_LONG).show()
             }
 
             OutlinedTextField(
@@ -351,10 +365,20 @@ private fun KernelFeaturesCard(
                 modifier = Modifier.fillMaxWidth()
             )
             Button(onClick = {
-                Shell.cmd("mkdir -p /data/adb/hydra")
-                Shell.cmd("echo '$unameName' > /data/adb/hydra/uname_name")
-                Toast.makeText(stealthCtx, "已保存 · 重启后生效", Toast.LENGTH_SHORT).show()
+                val okw = writeCfg("uname_name", unameName)
+                Toast.makeText(stealthCtx,
+                    if (okw) "已保存 · 重启后生效" else "写入失败（root shell 异常）",
+                    Toast.LENGTH_LONG).show()
             }) { Text("保存内核名") }
+
+            if (!unameLoaded) {
+                Text(
+                    text = "配置读取中…",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+            }
 
             var umountChecked by rememberSaveable {
                 mutableStateOf(Natives.isDefaultUmountModules())
