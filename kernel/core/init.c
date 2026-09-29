@@ -26,6 +26,7 @@
 #include "hook/syscall_hook.h"
 #include "feature/adb_root.h"
 #include "feature/selinux_hide.h"
+#include "feature/pathhide.h"
 #include "feature/sulog.h"
 #include "infra/symbol_resolver.h"
 
