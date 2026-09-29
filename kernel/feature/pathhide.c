@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
-// HydraSU pathhide — hide configured paths (default: /data/adb, /data/adb/ksu)
-// from non-privileged processes. Ported from FolkPatch folkpatch_pathhide
-// (GPL-2.0-or-later) to HydraSU's syscall-table hook architecture.
-// Hooks: openat/faccessat/newfstatat (pre -> -ENOENT), getdents64 (post ->
-// dirent filtering). uid 0 and allowlisted (root-granted) uids bypass.
+// HydraSU pathhide v2 — hide configured paths from non-privileged processes.
+// Ported from FolkPatch folkpatch_pathhide (GPL-2.0-or-later) to HydraSU's
+// syscall-table hook architecture. Handlers must be plain syscall_fn_t
+// (single pt_regs arg); originals are saved per-hook.
 #include "linux/file.h"
 #include "linux/fcntl.h"
 #include "linux/namei.h"
@@ -64,36 +63,45 @@ static bool path_is_blocked(const char *p)
 	return false;
 }
 
-// ---- pre-handlers: openat / faccessat / newfstatat ----
-static long pathhide_pre_path(int orig_nr, struct pt_regs *regs)
+static long hydra_openat(const struct pt_regs *regs)
 {
 	char resolved[PATHHIDE_MAX_PATH_LEN];
-	const char __user *uname = (const char __user *)PT_REGS_PARM2(regs);
+	const char __user *uname = (const char __user *)regs->__PT_PARM2_REG;
 
 	if (!pathhide_should_filter()) goto orig;
 	if (strncpy_from_user_nofault(resolved, uname, sizeof(resolved)) <= 0)
 		goto orig;
 	if (path_is_blocked(resolved)) return -ENOENT;
 orig:
-	return ksu_syscall_table[orig_nr](regs);
+	return orig_openat(regs);
 }
 
-long ksu_handle_openat_pathhide(int orig_nr, struct pt_regs *regs)
+static long hydra_faccessat(const struct pt_regs *regs)
 {
-	return pathhide_pre_path(orig_nr, regs);
+	char resolved[PATHHIDE_MAX_PATH_LEN];
+	const char __user *uname = (const char __user *)regs->__PT_PARM2_REG;
+
+	if (!pathhide_should_filter()) goto orig;
+	if (strncpy_from_user_nofault(resolved, uname, sizeof(resolved)) <= 0)
+		goto orig;
+	if (path_is_blocked(resolved)) return -ENOENT;
+orig:
+	return orig_faccessat(regs);
 }
 
-long ksu_handle_faccessat_pathhide(int orig_nr, struct pt_regs *regs)
+static long hydra_newfstatat(const struct pt_regs *regs)
 {
-	return pathhide_pre_path(orig_nr, regs);
+	char resolved[PATHHIDE_MAX_PATH_LEN];
+	const char __user *uname = (const char __user *)regs->__PT_PARM2_REG;
+
+	if (!pathhide_should_filter()) goto orig;
+	if (strncpy_from_user_nofault(resolved, uname, sizeof(resolved)) <= 0)
+		goto orig;
+	if (path_is_blocked(resolved)) return -ENOENT;
+orig:
+	return orig_newfstatat(regs);
 }
 
-long ksu_handle_newfstatat_pathhide(int orig_nr, struct pt_regs *regs)
-{
-	return pathhide_pre_path(orig_nr, regs);
-}
-
-// ---- getdents64 post-filter ----
 static int pathhide_filter_dirents(char *data, int len, const char *dir)
 {
 	int pos = 0, out = 0;
@@ -122,7 +130,7 @@ static int pathhide_filter_dirents(char *data, int len, const char *dir)
 	return out;
 }
 
-long ksu_handle_getdents64_pathhide(int orig_nr, struct pt_regs *regs)
+static long hydra_getdents64(const struct pt_regs *regs)
 {
 	char dir[PATHHIDE_MAX_PATH_LEN];
 	char *snapshot;
@@ -134,10 +142,10 @@ long ksu_handle_getdents64_pathhide(int orig_nr, struct pt_regs *regs)
 
 	if (!pathhide_should_filter()) goto orig;
 
-	len = (int)PT_REGS_SYSCALL_PARM3(regs);
+	len = (int)regs->__PT_PARM3_REG;
 	if (len <= 0 || len > PATHHIDE_DIRENT_LEN) goto orig;
 
-	dfd = (int)PT_REGS_SYSCALL_PARM1(regs);
+	dfd = (int)regs->__PT_PARM1_REG;
 	if (dfd == AT_FDCWD) goto orig;
 	f = fget_raw(dfd);
 	if (!f) goto orig;
@@ -146,7 +154,7 @@ long ksu_handle_getdents64_pathhide(int orig_nr, struct pt_regs *regs)
 	if (IS_ERR(base)) goto orig;
 	memmove(fdpath, base, strlen(base) + 1);
 
-	user_data = (void __user *)PT_REGS_PARM2(regs);
+	user_data = (void __user *)regs->__PT_PARM2_REG;
 	snapshot = vmalloc(len);
 	if (!snapshot) goto orig;
 	if (copy_from_user(snapshot, user_data, len)) {
@@ -159,7 +167,7 @@ long ksu_handle_getdents64_pathhide(int orig_nr, struct pt_regs *regs)
 	vfree(snapshot);
 	return len;
 orig:
-	return ksu_syscall_table[orig_nr](regs);
+	return orig_getdents64(regs);
 }
 
 // ---- config load (called from the deferred stealth work) ----
@@ -204,14 +212,10 @@ void __init ksu_pathhide_init(void)
 	strcpy(hide_paths[hide_path_count++], "/data/adb");
 	strcpy(hide_paths[hide_path_count++], "/data/adb/ksu");
 
-	ksu_syscall_table_hook(__NR_openat, ksu_handle_openat_pathhide,
-			       &orig_openat);
-	ksu_syscall_table_hook(__NR_faccessat, ksu_handle_faccessat_pathhide,
-			       &orig_faccessat);
-	ksu_syscall_table_hook(__NR3264_fstatat, ksu_handle_newfstatat_pathhide,
-			       &orig_newfstatat);
-	ksu_syscall_table_hook(__NR_getdents64, ksu_handle_getdents64_pathhide,
-			       &orig_getdents64);
+	ksu_syscall_table_hook(__NR_openat, hydra_openat, &orig_openat);
+	ksu_syscall_table_hook(__NR_faccessat, hydra_faccessat, &orig_faccessat);
+	ksu_syscall_table_hook(__NR3264_fstatat, hydra_newfstatat, &orig_newfstatat);
+	ksu_syscall_table_hook(__NR_getdents64, hydra_getdents64, &orig_getdents64);
 	pathhide_ready = true;
 }
 
