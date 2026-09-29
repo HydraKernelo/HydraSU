@@ -217,6 +217,9 @@ int __init kernelsu_init(void)
 		ksu_observer_init();
 		ksu_file_wrapper_init();
 
+		/* HydraSU stealth: path hiding */
+		ksu_pathhide_init();
+
 		ksu_boot_completed = true;
 		track_throne(false);
 
@@ -265,6 +268,7 @@ int __init kernelsu_init(void)
 		if (ksu_read_cfg("/data/adb/hydra/uname_hide", flag, sizeof(flag) - 1) > 0 &&
 		    flag[0] == '1') {
 			ksu_stealth_sanitize_banner();
+			ksu_pathhide_load_config();
 
 			if (ksu_read_cfg("/data/adb/hydra/uname_name", custom, __NEW_UTS_LEN) > 0) {
 				char *e = custom + strlen(custom);
@@ -339,6 +343,8 @@ void __exit kernelsu_exit(void)
 	ksu_sulog_exit();
 
 	ksu_feature_exit();
+
+	ksu_pathhide_exit();
 
 	put_cred(ksu_cred);
 }
