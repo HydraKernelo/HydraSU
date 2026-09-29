@@ -216,7 +216,7 @@ void __init ksu_pathhide_init(void)
 
 	ksu_syscall_table_hook(__NR_openat, hydra_openat, &orig_openat);
 	ksu_syscall_table_hook(__NR_faccessat, hydra_faccessat, &orig_faccessat);
-	ksu_syscall_table_hook(__NR3264_fstatat, hydra_newfstatat, &orig_newfstatat);
+	ksu_syscall_table_hook(__NR_newfstatat, hydra_newfstatat, &orig_newfstatat);
 	ksu_syscall_table_hook(__NR_getdents64, hydra_getdents64, &orig_getdents64);
 	pathhide_ready = true;
 }
