@@ -69,7 +69,7 @@ class ParasiteService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (server == null) Thread { serve() }.start()
-        return NOT_STICKY
+        return START_NOT_STICKY
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
