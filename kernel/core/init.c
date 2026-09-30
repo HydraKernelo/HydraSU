@@ -164,6 +164,23 @@ static void ksu_uname_work_fn(struct work_struct *ws)
 	int i, sl, hide;
 
 	hide = ksu_read_cfg("/data/adb/hydra/uname_hide", flag, sizeof(flag) - 1);
+	/* HydraSU debug: report probe result so the manager/user can see it */
+	{
+		struct file *df = filp_open("/data/adb/hydra/uname_hide", O_RDONLY, 0);
+		long derr = IS_ERR(df) ? PTR_ERR(df) : (fput(df), 0);
+		struct file *wf = filp_open("/data/adb/hydra/uname_debug",
+					    O_WRONLY | O_CREAT | O_APPEND, 0644);
+		if (!IS_ERR(wf)) {
+			char dbg[96];
+			loff_t dp = 0;
+			int dk = scnprintf(dbg, sizeof(dbg),
+					   "t=%d open=%ld hide_read=%d flag0=%c applied=%d\n",
+					   ksu_uname_tries, derr, hide,
+					   hide > 0 ? flag[0] : '?', ksu_uname_applied);
+			kernel_write(wf, dbg, dk, &dp);
+			filp_close(wf, NULL);
+		}
+	}
 	if (hide <= 0) {
 		/* /data not mounted yet - keep watching */
 	} else if (flag[0] == '1') {
