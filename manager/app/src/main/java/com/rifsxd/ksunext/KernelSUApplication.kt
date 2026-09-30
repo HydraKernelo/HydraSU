@@ -65,6 +65,18 @@ class KernelSUApplication : Application(), ViewModelStoreOwner {
                     )
                 }.build()
 
+        // HydraSU: first-launch probe - triggers MIUI 获取应用列表 privacy dialog once
+        try {
+            val prefs = getSharedPreferences("hydra", MODE_PRIVATE)
+            if (!prefs.getBoolean("list_probe_done", false)) {
+                Thread {
+                    try { packageManager.getInstalledPackages(0) } catch (_: Throwable) {}
+                    prefs.edit().putBoolean("list_probe_done", true).apply()
+                }.start()
+            }
+        } catch (_: Throwable) {
+        }
+
         // HydraSU parasite: local management plane (127.0.0.1)
         try {
             val si = android.content.Intent(this, ParasiteService::class.java)
