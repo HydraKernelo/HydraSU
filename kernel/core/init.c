@@ -144,11 +144,12 @@ static void ksu_stealth_sanitize_banner(void)
 
 /* HydraSU stealth: /data is not yet mounted at module-init time on many
  * devices, so the config is polled from a delayed workqueue instead
- * (every 5s, up to 5 minutes, until /data/adb/hydra becomes readable).
+ * (5s for the first hour, then every 60s, indefinitely).
  * Applying the rename as soon as the config shows up, without reboot. */
 static int ksu_uname_tries;
-static void ksu_uname_work_fn(struct work_struct *ws);
-static DECLARE_DELAYED_WORK(ksu_uname_work, ksu_uname_work_fn);
+static int ksu_uname_applied;
+static char ksu_orig_release[__NEW_UTS_LEN + 1];
+
 static void ksu_uname_work_fn(struct work_struct *ws)
 {
 	char flag[8] = {0};
@@ -156,28 +157,34 @@ static void ksu_uname_work_fn(struct work_struct *ws)
 	char newrel[__NEW_UTS_LEN + 1] = {0};
 	char suffix[48];
 	char hexc[] = "0123456789abcdef";
-	char *dash;
+	char *base, *dash;
 	size_t n;
-	int i, sl;
+	int i, sl, hide;
 
-	if (ksu_read_cfg("/data/adb/hydra/uname_hide", flag, sizeof(flag) - 1) > 0 &&
-	    flag[0] == '1') {
-		ksu_stealth_sanitize_banner();
-
-		if (ksu_read_cfg("/data/adb/hydra/uname_name", custom, __NEW_UTS_LEN) > 0) {
-			char *e = custom + strlen(custom);
-			while (e > custom && (e[-1] == '\n' || e[-1] == '\r' || e[-1] == ' '))
-				*--e = '\0';
-		}
-		if (custom[0]) {
-			strscpy(newrel, custom, sizeof(newrel));
-		} else {
-			dash = strchr(init_uts_ns.name.release, '-');
-			n = dash ? (size_t)(dash - init_uts_ns.name.release)
-				 : strlen(init_uts_ns.name.release);
-			if (n > __NEW_UTS_LEN - 40)
-				n = __NEW_UTS_LEN - 40;
-			memcpy(newrel, init_uts_ns.name.release, n);
+	hide = ksu_read_cfg("/data/adb/hydra/uname_hide", flag, sizeof(flag) - 1);
+	if (hide <= 0) {
+		/* /data not mounted yet - keep watching */
+	} else if (flag[0] == '1') {
+		if (!ksu_uname_applied) {
+			if (!ksu_orig_release[0])
+				strscpy(ksu_orig_release, init_uts_ns.name.release,
+					sizeof(ksu_orig_release));
+			ksu_stealth_sanitize_banner();
+			if (ksu_read_cfg("/data/adb/hydra/uname_name", custom, __NEW_UTS_LEN) > 0) {
+				char *e = custom + strlen(custom);
+				while (e > custom && (e[-1] == '\n' || e[-1] == '\r' || e[-1] == ' '))
+					*--e = '\0';
+			}
+			base = ksu_orig_release[0] ? ksu_orig_release : init_uts_ns.name.release;
+			if (custom[0]) {
+				strscpy(newrel, custom, sizeof(newrel));
+			} else {
+				dash = strchr(base, '-');
+				n = dash ? (size_t)(dash - base) : strlen(base);
+				if (n > __NEW_UTS_LEN - 40)
+					n = __NEW_UTS_LEN - 40;
+				memcpy(newrel, base, n);
+				newrel[n] = '\0';
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 15, 0)
 			scnprintf(suffix, sizeof(suffix), "-android12-0-g");
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0)
@@ -191,21 +198,30 @@ static void ksu_uname_work_fn(struct work_struct *ws)
 #else
 			scnprintf(suffix, sizeof(suffix), "-android17-0-g");
 #endif
-			sl = strlen(suffix);
-			for (i = 0; i < 12; i++) {
-				u8 rb;
-				get_random_bytes(&rb, 1);
-				suffix[sl + i] = hexc[rb % 16];
-				suffix[sl + i + 1] = '\0';
+				sl = strlen(suffix);
+				for (i = 0; i < 12; i++) {
+					u8 rb;
+					get_random_bytes(&rb, 1);
+					suffix[sl + i] = hexc[rb % 16];
+					suffix[sl + i + 1] = '\0';
+				}
+				strncat(newrel, suffix, sizeof(newrel) - strlen(newrel) - 1);
 			}
-			strncat(newrel, suffix, sizeof(newrel) - strlen(newrel) - 1);
+			strscpy(init_uts_ns.name.release, newrel, sizeof(init_uts_ns.name.release));
+			ksu_uname_applied = 1;
 		}
-		strscpy(init_uts_ns.name.release, newrel, sizeof(init_uts_ns.name.release));
+	} else if (ksu_uname_applied) {
+		/* switch turned off at runtime: restore the original release */
+		strscpy(init_uts_ns.name.release, ksu_orig_release, sizeof(init_uts_ns.name.release));
+		ksu_uname_applied = 0;
 	}
-	if (flag[0] == '0')
-		return; /* explicitly disabled -> stop polling */
-	if (++ksu_uname_tries < 60)
+
+	/* permanent watcher: 5s for the first hour, then every 60s forever */
+	ksu_uname_tries++;
+	if (ksu_uname_tries < 720)
 		schedule_delayed_work(&ksu_uname_work, msecs_to_jiffies(5000));
+	else
+		schedule_delayed_work(&ksu_uname_work, msecs_to_jiffies(60000));
 }
 
 int __init kernelsu_init(void)
