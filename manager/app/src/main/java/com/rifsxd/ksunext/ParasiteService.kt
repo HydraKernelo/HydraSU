@@ -209,7 +209,7 @@ class ParasiteService : Service() {
                 method == "GET" && path == "/a/app.js" ->
                     serveText("app.js", "application/javascript; charset=utf-8", prefix)
                 method == "GET" && path == "/a/logo.png" ->
-                    serveText("logo.png", "image/png", prefix)
+                    serveBin("logo.png", "image/png")
                 method == "GET" && path == "/a/modbridge.js" ->
                     serveText("modbridge.js", "application/javascript; charset=utf-8", prefix)
                 method == "GET" && path == "/a/icons.svg" ->
@@ -249,6 +249,12 @@ class ParasiteService : Service() {
         } catch (_: Exception) {
             Triple(500, "text/plain", "asset missing".toByteArray())
         }
+    }
+
+    private fun serveBin(name: String, type: String): Triple<Int, String, ByteArray> = try {
+        Triple(200, type, File(webDir, name).readBytes())
+    } catch (_: Exception) {
+        Triple(500, "text/plain", "asset missing".toByteArray())
     }
 
     private fun respond(s: Socket, code: Int, type: String, payload: ByteArray) {
