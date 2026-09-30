@@ -147,6 +147,8 @@ static void ksu_stealth_sanitize_banner(void)
  * (every 5s, up to 5 minutes, until /data/adb/hydra becomes readable).
  * Applying the rename as soon as the config shows up, without reboot. */
 static int ksu_uname_tries;
+static void ksu_uname_work_fn(struct work_struct *ws);
+static DECLARE_DELAYED_WORK(ksu_uname_work, ksu_uname_work_fn);
 static void ksu_uname_work_fn(struct work_struct *ws)
 {
 	char flag[8] = {0};
@@ -205,8 +207,6 @@ static void ksu_uname_work_fn(struct work_struct *ws)
 	if (++ksu_uname_tries < 60)
 		schedule_delayed_work(&ksu_uname_work, msecs_to_jiffies(5000));
 }
-
-static DECLARE_DELAYED_WORK(ksu_uname_work, ksu_uname_work_fn);
 
 int __init kernelsu_init(void)
 {
