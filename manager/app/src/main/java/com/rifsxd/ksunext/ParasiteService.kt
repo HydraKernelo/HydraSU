@@ -155,7 +155,7 @@ class ParasiteService : Service() {
                     prefix = "/" + token
                 } else {
                     respond(s, 403, "text/plain; charset=utf-8",
-                        "HydraSU web console\n".toByteArray())
+                        "HydraSU 寄生控制台\n\n请使用管理器设置页的『复制完整地址』，\n在浏览器打开含密钥的地址（格式: http://127.0.0.1:38214/密钥/）\n".toByteArray())
                     return
                 }
             }
