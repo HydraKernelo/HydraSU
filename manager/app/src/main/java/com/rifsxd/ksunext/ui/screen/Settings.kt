@@ -383,16 +383,26 @@ private fun KernelFeaturesCard(
             OutlinedTextField(
                 value = hydraToken,
                 onValueChange = { },
-                label = { Text("寄生控制台 Token（浏览器 127.0.0.1:38214）") },
+                label = { Text("寄生控制台访问密钥") },
                 singleLine = true,
                 readOnly = true,
                 modifier = Modifier.fillMaxWidth()
             )
             Button(onClick = {
+                val full = "http://127.0.0.1:38214/" + hydraToken + "/"
                 val cb = stealthCtx.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                cb.setPrimaryClip(android.content.ClipData.newPlainText("hydra_token", hydraToken))
-                Toast.makeText(stealthCtx, "Token 已复制到剪贴板", Toast.LENGTH_SHORT).show()
-            }) { Text("复制 Token") }
+                cb.setPrimaryClip(android.content.ClipData.newPlainText("hydra_url", full))
+                Toast.makeText(stealthCtx, "完整地址已复制，粘贴到浏览器打开", Toast.LENGTH_LONG).show()
+            }) { Text("复制完整地址") }
+            Button(onClick = {
+                try {
+                    val full = "http://127.0.0.1:38214/" + hydraToken + "/"
+                    stealthCtx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW,
+                        android.net.Uri.parse(full)))
+                } catch (e: Exception) {
+                    Toast.makeText(stealthCtx, "没有可用浏览器", Toast.LENGTH_SHORT).show()
+                }
+            }) { Text("在浏览器打开控制台") }
 
             // ---- 环境检测 ----
             var detectItems by rememberSaveable { mutableStateOf(listOf<Pair<String, Boolean>>()) }
