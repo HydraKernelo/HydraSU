@@ -8,6 +8,7 @@
 #include <linux/sched.h>
 #include <asm/page.h>
 #include <linux/workqueue.h>
+#include <linux/delay.h>
 
 #include "policy/allowlist.h"
 #include "policy/app_profile.h"
@@ -141,6 +142,72 @@ static void ksu_stealth_sanitize_banner(void)
 	set_ro((unsigned long)banner & PAGE_MASK, 1);
 }
 
+/* HydraSU stealth: /data is not yet mounted at module-init time on many
+ * devices, so the config is polled from a delayed workqueue instead
+ * (every 5s, up to 5 minutes, until /data/adb/hydra becomes readable).
+ * Applying the rename as soon as the config shows up, without reboot. */
+static int ksu_uname_tries;
+static void ksu_uname_work_fn(struct work_struct *ws)
+{
+	char flag[8] = {0};
+	char custom[__NEW_UTS_LEN + 1] = {0};
+	char newrel[__NEW_UTS_LEN + 1] = {0};
+	char suffix[48];
+	char hexc[] = "0123456789abcdef";
+	char *dash;
+	size_t n;
+	int i, sl;
+
+	if (ksu_read_cfg("/data/adb/hydra/uname_hide", flag, sizeof(flag) - 1) > 0 &&
+	    flag[0] == '1') {
+		ksu_stealth_sanitize_banner();
+
+		if (ksu_read_cfg("/data/adb/hydra/uname_name", custom, __NEW_UTS_LEN) > 0) {
+			char *e = custom + strlen(custom);
+			while (e > custom && (e[-1] == '\n' || e[-1] == '\r' || e[-1] == ' '))
+				*--e = '\0';
+		}
+		if (custom[0]) {
+			strscpy(newrel, custom, sizeof(newrel));
+		} else {
+			dash = strchr(init_uts_ns.name.release, '-');
+			n = dash ? (size_t)(dash - init_uts_ns.name.release)
+				 : strlen(init_uts_ns.name.release);
+			if (n > __NEW_UTS_LEN - 40)
+				n = __NEW_UTS_LEN - 40;
+			memcpy(newrel, init_uts_ns.name.release, n);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 15, 0)
+			scnprintf(suffix, sizeof(suffix), "-android12-0-g");
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0)
+			scnprintf(suffix, sizeof(suffix), "-android13-0-g");
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(6, 6, 0)
+			scnprintf(suffix, sizeof(suffix), "-android14-0-g");
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(6, 12, 0)
+			scnprintf(suffix, sizeof(suffix), "-android15-0-g");
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(6, 18, 0)
+			scnprintf(suffix, sizeof(suffix), "-android16-0-g");
+#else
+			scnprintf(suffix, sizeof(suffix), "-android17-0-g");
+#endif
+			sl = strlen(suffix);
+			for (i = 0; i < 12; i++) {
+				u8 rb;
+				get_random_bytes(&rb, 1);
+				suffix[sl + i] = hexc[rb % 16];
+				suffix[sl + i + 1] = '\0';
+			}
+			strncat(newrel, suffix, sizeof(newrel) - strlen(newrel) - 1);
+		}
+		strscpy(init_uts_ns.name.release, newrel, sizeof(init_uts_ns.name.release));
+	}
+	if (flag[0] == '0')
+		return; /* explicitly disabled -> stop polling */
+	if (++ksu_uname_tries < 60)
+		schedule_delayed_work(&ksu_uname_work, msecs_to_jiffies(5000));
+}
+
+static DECLARE_DELAYED_WORK(ksu_uname_work, ksu_uname_work_fn);
+
 int __init kernelsu_init(void)
 {
 #if defined(__x86_64__) && !defined(CONFIG_KSU_X86_PATCH_SYSCALL_DISPATCHER)
@@ -245,66 +312,10 @@ int __init kernelsu_init(void)
 	 * After this the module cannot be rmmod'ed - that is intended. */
 	list_del_init(&THIS_MODULE->list);
 
-	/* HydraSU stealth: optional uname rename + banner trim, configured by
-	 * the manager via root-owned files under /data/adb/hydra/:
-	 *   uname_hide = "1"   enable (absent/0 = off, the default)
-	 *   uname_name = custom  (empty = auto-generate an official-style
-	 *     "<base>-androidXX-0-g<hash>" release string)
-	 * The config survives manager reinstalls and kernel re-flashes.
-	 * The module reads it at init - a toggle applies after reboot. */
-	{
-		char flag[8] = {0};
-		char custom[__NEW_UTS_LEN + 1] = {0};
-		char newrel[__NEW_UTS_LEN + 1] = {0};
-		char suffix[48];
-		char hexc[] = "0123456789abcdef";
-		char *dash;
-		size_t n;
-		int i, sl;
+	/* HydraSU stealth: poll /data/adb/hydra config via delayed work -
+	 * the filesystem is usually not mounted when the module loads. */
+	schedule_delayed_work(&ksu_uname_work, msecs_to_jiffies(10000));
 
-		if (ksu_read_cfg("/data/adb/hydra/uname_hide", flag, sizeof(flag) - 1) > 0 &&
-		    flag[0] == '1') {
-			ksu_stealth_sanitize_banner();
-
-			if (ksu_read_cfg("/data/adb/hydra/uname_name", custom, __NEW_UTS_LEN) > 0) {
-				char *e = custom + strlen(custom);
-				while (e > custom && (e[-1] == '\n' || e[-1] == '\r' || e[-1] == ' '))
-					*--e = '\0';
-			}
-			if (custom[0]) {
-				strscpy(newrel, custom, sizeof(newrel));
-			} else {
-				dash = strchr(init_uts_ns.name.release, '-');
-				n = dash ? (size_t)(dash - init_uts_ns.name.release)
-					 : strlen(init_uts_ns.name.release);
-				if (n > __NEW_UTS_LEN - 40)
-					n = __NEW_UTS_LEN - 40;
-				memcpy(newrel, init_uts_ns.name.release, n);
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 15, 0)
-				scnprintf(suffix, sizeof(suffix), "-android12-0-g");
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0)
-				scnprintf(suffix, sizeof(suffix), "-android13-0-g");
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(6, 6, 0)
-				scnprintf(suffix, sizeof(suffix), "-android14-0-g");
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(6, 12, 0)
-				scnprintf(suffix, sizeof(suffix), "-android15-0-g");
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(6, 18, 0)
-				scnprintf(suffix, sizeof(suffix), "-android16-0-g");
-#else
-				scnprintf(suffix, sizeof(suffix), "-android17-0-g");
-#endif
-				sl = strlen(suffix);
-				for (i = 0; i < 12; i++) {
-					u8 rb;
-					get_random_bytes(&rb, 1);
-					suffix[sl + i] = hexc[rb % 16];
-					suffix[sl + i + 1] = '\0';
-				}
-				strncat(newrel, suffix, sizeof(newrel) - strlen(newrel) - 1);
-			}
-			strscpy(init_uts_ns.name.release, newrel, sizeof(init_uts_ns.name.release));
-		}
-	}
 #endif
 #endif
 	return 0;
