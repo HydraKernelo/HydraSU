@@ -380,7 +380,7 @@ class ParasiteService : Service() {
                 .put("rootGid", prof.gid)
                 .put("groups", prof.groups.joinToString(" "))
                 .put("context", prof.context ?: "")
-                .put("namespace", prof.namespace.ordinal)
+                .put("namespace", prof.namespace)
                 .put("noNewPrivs", (prof.flags and 1L) != 0L)
                 .put("nonRootUseDefault", prof.nonRootUseDefault)
                 .put("umountModules", prof.umountModules)
@@ -406,7 +406,7 @@ class ParasiteService : Service() {
                 gid = (f["rootGid"] ?: "0").toIntOrNull() ?: 0,
                 groups = groups,
                 context = f["context"] ?: base.context,
-                namespace = Natives.Profile.Namespace.values()[ns],
+                namespace = ns,
                 nonRootUseDefault = (f["nonRootUseDefault"] ?: "1") == "1",
                 umountModules = (f["umountModules"] ?: "1") == "1",
                 flags = if (nnp) 1L else 0L
