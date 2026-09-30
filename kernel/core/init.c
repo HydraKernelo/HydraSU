@@ -150,6 +150,8 @@ static int ksu_uname_tries;
 static int ksu_uname_applied;
 static char ksu_orig_release[__NEW_UTS_LEN + 1];
 
+static void ksu_uname_work_fn(struct work_struct *ws);
+static DECLARE_DELAYED_WORK(ksu_uname_work, ksu_uname_work_fn);
 static void ksu_uname_work_fn(struct work_struct *ws)
 {
 	char flag[8] = {0};
