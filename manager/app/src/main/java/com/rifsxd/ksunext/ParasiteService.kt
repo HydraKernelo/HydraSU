@@ -281,7 +281,7 @@ class ParasiteService : Service() {
     private fun apiStatusV3(): Triple<Int, String, ByteArray> {
         val id = Shell.cmd("id").exec()
         val root = id.code == 0 && id.out.joinToString("").contains("uid=0")
-        val kernel = System.getProperty("os.version") ?: Shell.cmd("uname -r").exec().out.joinToString("")
+        val kernel = Shell.cmd("uname -r").exec().out.joinToString("").ifBlank { System.getProperty("os.version") ?: "" }
         val kmiM = Regex("android(\\d+)-(\\d+\\.\\d+)").find(kernel)
         val kmi = if (kmiM != null) "android" + kmiM.groupValues[1] + "-" + kmiM.groupValues[2] else kernel
         val stealth = try {
@@ -327,10 +327,9 @@ class ParasiteService : Service() {
             val pkg = pi.packageName
             if (pkg == packageName) continue
             val ai = pi.applicationInfo ?: continue
-            val prof = try { Natives.getAppProfile(pkg, ai.uid) } catch (_: Exception) { null } ?: continue
-            val granted = prof.allowSu
-            val configured = prof.allowSu || !prof.rootUseDefault || !prof.nonRootUseDefault ||
-                !prof.umountModules || prof.name.isNotBlank()
+            val prof = try { Natives.getAppProfile(pkg, ai.uid) } catch (_: Throwable) { null }
+            val granted = prof?.allowSu == true
+            val configured = prof != null && (prof.allowSu || !prof.rootUseDefault || !prof.nonRootUseDefault || !prof.umountModules || prof.name.isNotBlank())
             val isSystem = (ai.flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0
             val userId = ai.uid / 100000
             val item = JSONObject()
