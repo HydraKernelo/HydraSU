@@ -168,18 +168,8 @@ static void ksu_uname_work_fn(struct work_struct *ws)
 	{
 		struct file *df = filp_open("/data/adb/hydra/uname_hide", O_RDONLY, 0);
 		long derr = IS_ERR(df) ? PTR_ERR(df) : (fput(df), 0);
-		struct file *wf = filp_open("/data/adb/hydra/uname_debug",
-					    O_WRONLY | O_CREAT | O_APPEND, 0644);
-		if (!IS_ERR(wf)) {
-			char dbg[96];
-			loff_t dp = 0;
-			int dk = scnprintf(dbg, sizeof(dbg),
-					   "t=%d open=%ld hide_read=%d flag0=%c applied=%d\n",
-					   ksu_uname_tries, derr, hide,
-					   hide > 0 ? flag[0] : '?', ksu_uname_applied);
-			kernel_write(wf, dbg, dk, &dp);
-			filp_close(wf, NULL);
-		}
+		printk(KERN_INFO "H: w t=%d open=%ld hide=%d applied=%d\n",
+		       ksu_uname_tries, derr, hide, ksu_uname_applied);
 	}
 	if (hide <= 0) {
 		/* /data not mounted yet - keep watching */
@@ -228,6 +218,7 @@ static void ksu_uname_work_fn(struct work_struct *ws)
 			}
 			strscpy(init_uts_ns.name.release, newrel, sizeof(init_uts_ns.name.release));
 			ksu_uname_applied = 1;
+			printk(KERN_INFO "H: applied\n");
 		}
 	} else if (ksu_uname_applied) {
 		/* switch turned off at runtime: restore the original release */
@@ -350,6 +341,7 @@ int __init kernelsu_init(void)
 	/* HydraSU stealth: poll /data/adb/hydra config via delayed work -
 	 * the filesystem is usually not mounted when the module loads. */
 	schedule_delayed_work(&ksu_uname_work, msecs_to_jiffies(10000));
+	printk(KERN_INFO "H: watcher start\n");
 
 #endif
 #endif
