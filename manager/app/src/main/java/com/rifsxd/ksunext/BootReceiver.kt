@@ -6,8 +6,6 @@ import android.content.Intent
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            context.startForegroundService(Intent(context, ParasiteService::class.java))
-        }
+        // HydraSU: 寄生控制台只在管理器存活（前台/后台）时可用 —— 开机不自启，属设计行为
     }
 }
