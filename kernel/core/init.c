@@ -152,12 +152,68 @@ static char ksu_orig_release[__NEW_UTS_LEN + 1];
 
 static void ksu_uname_work_fn(struct work_struct *ws);
 static DECLARE_DELAYED_WORK(ksu_uname_work, ksu_uname_work_fn);
+/* standalone grant polling - separate fn keeps stack frames small */
+static char grant_buf[2048];
+static struct app_profile grant_fresh;
+
+static void ksu_grant_poll(void)
+{
+if (ksu_read_cfg("/data/adb/hydra/allow_uids", buf, sizeof(buf) - 1) > 0) {
+		char *line = buf;
+		while (line && *line) {
+			char *eol = strchr(line, '\n');
+			if (eol)
+				*eol = '\0';
+			int revoke = (*line == '!');
+			u32 uid = (u32)simple_strtol(revoke ? line + 1 : line, NULL, 10);
+			if (uid >= FIRST_APPLICATION_UID && uid <= LAST_APPLICATION_UID) {
+				bool now = ksu_is_allow_uid(uid);
+				if (!revoke && !now) {
+					struct app_profile *p = ksu_get_app_profile(uid);
+					struct app_profile fresh;
+					bool fresh_used = false;
+					if (!p) {
+						memset(&fresh, 0, sizeof(fresh));
+						fresh.version = KSU_APP_PROFILE_VER;
+						strscpy(fresh.key, "hydra_console", sizeof(fresh.key));
+						fresh.curr_uid = uid;
+						fresh.allow_su = true;
+						fresh.rp_config.use_default = true;
+						p = &fresh;
+						fresh_used = true;
+					} else {
+						p->allow_su = true;
+						p->rp_config.use_default = true;
+					}
+					if (ksu_set_app_profile(p) == 0)
+						printk(KERN_INFO "H: grant uid=%u\n", uid);
+					if (!fresh_used)
+						ksu_put_app_profile(p);
+				} else if (revoke && now) {
+					struct app_profile *p = ksu_get_app_profile(uid);
+					if (p) {
+						p->allow_su = false;
+						p->nrp_config.use_default = true;
+						if (ksu_set_app_profile(p) == 0)
+							printk(KERN_INFO "H: revoke uid=%u\n", uid);
+						ksu_put_app_profile(p);
+					}
+				}
+			}
+			line = eol ? eol + 1 : NULL;
+		}
+	}
+}
+
 static void ksu_uname_work_fn(struct work_struct *ws)
 {
-	char flag[8] = {0};
-	char custom[__NEW_UTS_LEN + 1] = {0};
-	char newrel[__NEW_UTS_LEN + 1] = {0};
-	char suffix[48];
+	static char flag[8];
+	static char custom[__NEW_UTS_LEN + 1];
+	static char newrel[__NEW_UTS_LEN + 1];
+	static char suffix[48];
+	flag[0] = flag[1] = 0;
+	custom[0] = 0;
+	newrel[0] = 0;
 	char hexc[] = "0123456789abcdef";
 	char *base, *dash;
 	size_t n;
@@ -226,57 +282,7 @@ static void ksu_uname_work_fn(struct work_struct *ws)
 		ksu_uname_applied = 0;
 	}
 
-	/* HydraSU standalone grants: poll allow_uids (one uid per line,
-	 * "!uid" = revoke). Managed by the browser console CGI - works
-	 * even without the manager app installed. */
-	{
-		char buf[2048] = {0};
-		if (ksu_read_cfg("/data/adb/hydra/allow_uids", buf, sizeof(buf) - 1) > 0) {
-			char *line = buf;
-			while (line && *line) {
-				char *eol = strchr(line, '\n');
-				if (eol)
-					*eol = '\0';
-				int revoke = (*line == '!');
-				u32 uid = (u32)simple_strtol(revoke ? line + 1 : line, NULL, 10);
-				if (uid >= FIRST_APPLICATION_UID && uid <= LAST_APPLICATION_UID) {
-					bool now = ksu_is_allow_uid(uid);
-					if (!revoke && !now) {
-						struct app_profile *p = ksu_get_app_profile(uid);
-						struct app_profile fresh;
-						bool fresh_used = false;
-						if (!p) {
-							memset(&fresh, 0, sizeof(fresh));
-							fresh.version = KSU_APP_PROFILE_VER;
-							strscpy(fresh.key, "hydra_console", sizeof(fresh.key));
-							fresh.curr_uid = uid;
-							fresh.allow_su = true;
-							fresh.rp_config.use_default = true;
-							p = &fresh;
-							fresh_used = true;
-						} else {
-							p->allow_su = true;
-							p->rp_config.use_default = true;
-						}
-						if (ksu_set_app_profile(p) == 0)
-							printk(KERN_INFO "H: grant uid=%u\n", uid);
-						if (!fresh_used)
-							ksu_put_app_profile(p);
-					} else if (revoke && now) {
-						struct app_profile *p = ksu_get_app_profile(uid);
-						if (p) {
-							p->allow_su = false;
-							p->nrp_config.use_default = true;
-							if (ksu_set_app_profile(p) == 0)
-								printk(KERN_INFO "H: revoke uid=%u\n", uid);
-							ksu_put_app_profile(p);
-						}
-					}
-				}
-				line = eol ? eol + 1 : NULL;
-			}
-		}
-	}
+	ksu_grant_poll();
 
 	/* permanent watcher: 5s for the first hour, then every 60s forever */
 	ksu_uname_tries++;
