@@ -64,11 +64,13 @@ class ParasiteService : Service() {
             File(webDir, "logo.png").writeBytes(Base64.decode(LOGO_B64, Base64.DEFAULT))
         } catch (_: Exception) {
         }
-        startForegroundNotice()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (server == null) Thread { serve() }.start()
+        // 通知仅在管理器前台启动时显示；模块静默拉起则无通知
+        if (intent?.getBooleanExtra("notify", false) == true) startForegroundNotice()
+        else try { stopForeground(true) } catch (_: Exception) {}
         // 管理器后台存活期间控制台可用；被杀后 START_STICKY 自动拉起
         return START_STICKY
     }
