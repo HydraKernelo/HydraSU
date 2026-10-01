@@ -105,6 +105,14 @@ fun InstallScreen(navigator: DestinationsNavigator) {
 
     val currentKmi by produceState(initialValue = "") { value = getCurrentKmi() }
 
+    // HydraSU v1.1: auto-select bundled lkm once KMI is known
+    produceState(initialValue = Unit, currentKmi) {
+        if (currentKmi.isNotBlank() && lkmSelection == LkmSelection.KmiNone) {
+            val has = ksuApp.assets.list("lkm")?.any { it.contains(currentKmi) } == true
+            if (has) lkmSelection = LkmSelection.KmiString(currentKmi)
+        }
+    }
+
     val selectKmiDialog = rememberSelectKmiDialog { kmi ->
         kmi?.let {
             lkmSelection = LkmSelection.KmiString(it)
