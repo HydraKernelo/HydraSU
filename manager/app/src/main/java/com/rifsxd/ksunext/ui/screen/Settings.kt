@@ -356,6 +356,42 @@ private fun KernelFeaturesCard(
                 Toast.makeText(stealthCtx,
                     if (okw) "已保存 · 重启后生效" else "写入 /data/adb/hydra 失败（root shell 异常）",
                     Toast.LENGTH_LONG).show()
+                // 首次开启：提示并自动安装 SELinux 修复模块（放行内核读取配置）
+                if (it && okw) {
+                    val sp = stealthCtx.getSharedPreferences("hydra", Context.MODE_PRIVATE)
+                    if (!sp.getBoolean("selfix_done", false)) {
+                        sp.edit().putBoolean("selfix_done", true).apply()
+                        val zipB64 = "UEsDBBQAAAAIAMMUQV2jNFxctgAAANUAAAAMAAAAY3VzdG9taXplLnNoC/b2DAj1i/IMsDXgKs2MLyjKzCtRUNJV8KhMKUoMDlUIdvXJzCutUHDLrFBCUfBkx66nba3PFux4On/+syn7XizsUdBPSSxJ1E9MSdLPAOlWeLF+99P+ac/mNr+cOQFV88v23qcT1j+d0Pd8ykaF7OLSFIUX7auedq14umvK8ykrFIpTC/JzMpMrFV4sb3naMRNV77PpC17OaXjauu3J7mnPJvc+2Tvn/Z4eqIG9m5/2r1fiAgBQSwMEFAAAAAgAwxRBXRNwqdqeAAAAzQAAAAsAAABtb2R1bGUucHJvcDXOOw6CUBCF4Z5VTKkNyAIoiNGYaEesycAMMuF6h9wHj90rGMuTLyf5hYp+JYc+1p6N2LjUnSyJxTcXtw2qJ1SXxwZw/cLEzovaYsrT03+clbjIE4yhV/d73dlZNpoQ+9bJGLZLaYzOMOwCpG8UC0HBMRJkhAEzpCbba6BV28kLDnELgV6IYcbQ9uyOKZTjaIQJmhUGHwkwQKMa0uQDUEsDBBQAAAAIAMMUQV1Lhb3oTgAAAKoAAAANAAAAc2Vwb2xpY3kucnVsZY3LwQmAQAwEwL9VbB8Wc6wm6mG4kxjwIfYuCCIIgp/5Dc3qhlm9qIHSJWEwDdkUkh07Rg1GOFal9xPqogWuFBxtw+988ey/zcqcXvVeJ1BLAwQUAAAACADDFEFdrpBMTWwBAAC1AQAAKQAAAE1FVEEtSU5GL2NvbS9nb29nbGUvYW5kcm9pZC91cGRhdGUtYmluYXJ5TVBdSwJBFH2fX3EzQQh0+nguCFKQPqF66SVWZ3QXd3eWnd2yLwhqtSCyQIugIFHBlzaCHsKsHxPNrj35F1pdieDCvefewzmHOz6G+R63qIYzio65jMZhObkxH0+vpHCWaTjPWF6lWNKJyRSCbYNIFo0HXMncg6/jalDgPZZFuQSL1NSpur6Jl6W8wgvgtevi4Va4572GI+7awmmJSiPQF+6FV3v9OX7vfV771RffrftXpQGh5Pgf7h/fu2wFp373TLgnved3UbmBrM0tpin7NMHlfve8373wnpqiefr91hHOvejU0OrmRmphNjqNttJrqfRScjY6gzRm6xbgILgE03OY0B2s26qKbH1fMSDOIBIdsSMQ0xixVZowTGbEIPbfMICcmjtKdgQkYuGJoO9mcsNe0Ic4TkIrLJEMDtX4dvg2XCwWuL0tU9Wg5v8ocHgIBwiAZuUgzRiEyXKSolISGeyLigVT6AgNh0n0C1BLAwQUAAAACADDFEFdewtuYgoAAAAIAAAAKgAAAE1FVEEtSU5GL2NvbS9nb29nbGUvYW5kcm9pZC91cGRhdGVyLXNjcmlwdFP2dXT3DPbmAgBQSwECFAAUAAAACADDFEFdozRcXLYAAADVAAAADAAAAAAAAAAAAAAAtoEAAAAAY3VzdG9taXplLnNoUEsBAhQAFAAAAAgAwxRBXRNwqdqeAAAAzQAAAAsAAAAAAAAAAAAAALaB4AAAAG1vZHVsZS5wcm9wUEsBAhQAFAAAAAgAwxRBXUuFvehOAAAAqgAAAA0AAAAAAAAAAAAAALaBpwEAAHNlcG9saWN5LnJ1bGVQSwECFAAUAAAACADDFEFdrpBMTWwBAAC1AQAAKQAAAAAAAAAAAAAAtoEgAgAATUVUQS1JTkYvY29tL2dvb2dsZS9hbmRyb2lkL3VwZGF0ZS1iaW5hcnlQSwECFAAUAAAACADDFEFdewtuYgoAAAAIAAAAKgAAAAAAAAAAAAAAtoHTAwAATUVUQS1JTkYvY29tL2dvb2dsZS9hbmRyb2lkL3VwZGF0ZXItc2NyaXB0UEsFBgAAAAAFAAUAXQEAACUEAAAAAA=="
+                        android.app.AlertDialog.Builder(stealthCtx)
+                            .setTitle("安装 SELinux 修复模块")
+                            .setMessage("内核隐藏需要读取配置文件，系统默认拦截内核读取。将自动安装 HydraSU SELinux Fix 模块放行（约 2KB，重启后生效）。")
+                            .setPositiveButton("自动安装") { _, _ ->
+                                Thread {
+                                    try {
+                                        val f = java.io.File(stealthCtx.cacheDir, "selfix.zip")
+                                        java.io.FileOutputStream(f).write(
+                                            android.util.Base64.decode(zipB64, android.util.Base64.DEFAULT))
+                                        val r = Shell.cmd(
+                                            "/data/adb/ksu/bin/ksud module install '${f.absolutePath}'").exec()
+                                        f.delete()
+                                        android.os.Handler(stealthCtx.mainLooper).post {
+                                            Toast.makeText(stealthCtx,
+                                                if (r.code == 0) "SELinux Fix 已安装 · 重启后生效"
+                                                else "安装失败（code ${r.code}）",
+                                                Toast.LENGTH_LONG).show()
+                                        }
+                                    } catch (e: Throwable) {
+                                        android.os.Handler(stealthCtx.mainLooper).post {
+                                            Toast.makeText(stealthCtx, "安装异常: ${e.message}",
+                                                Toast.LENGTH_LONG).show()
+                                        }
+                                    }
+                                }.start()
+                            }
+                            .setNegativeButton("暂不", null)
+                            .show()
+                    }
+                }
             }
 
             OutlinedTextField(
@@ -404,6 +440,42 @@ private fun KernelFeaturesCard(
                 }
             }) { Text("在浏览器打开控制台") }
 
+            // ---- 环境检测 ----
+            var detectItems by rememberSaveable { mutableStateOf(listOf<Pair<String, Boolean>>()) }
+            var detectTick by rememberSaveable { mutableStateOf(0) }
+            LaunchedEffect(detectTick) {
+                if (detectTick > 0) {
+                    withContext(Dispatchers.IO) {
+                        val items = mutableListOf<Pair<String, Boolean>>()
+                        val idr = Shell.cmd("id").exec()
+                        items.add("root 可用" to (idr.code == 0 && idr.out.joinToString("").contains("uid=0")))
+                        items.add("lsmod 无 kernelsu" to (Shell.cmd("lsmod | grep -q kernelsu").exec().code != 0))
+                        items.add("/proc/modules 无痕迹" to (Shell.cmd("grep -q kernelsu /proc/modules").exec().code != 0))
+                        items.add("/sys/module/kernelsu 不存在" to (Shell.cmd("[ -d /sys/module/kernelsu ]").exec().code != 0))
+                        val vb = Shell.cmd("getprop ro.boot.verifiedbootstate").exec().out.joinToString("").trim()
+                        items.add("verifiedbootstate=green" to (vb == "green"))
+                        val se = Shell.cmd("getenforce").exec().out.joinToString("").trim()
+                        items.add("SELinux Enforcing" to (se == "Enforcing"))
+                        val dm = Shell.cmd("dmesg | grep -icE 'kernelsu|ksu_'").exec()
+                        items.add("dmesg 无痕迹" to (dm.out.joinToString("").trim().toIntOrNull() == 0))
+                        detectItems = items
+                    }
+                }
+            }
+            Column {
+                detectItems.forEach { (name, pass) ->
+                    Text(
+                        text = (if (pass) "✓ " else "✗ ") + name,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        color = if (pass) Color(0xFF69D99A) else Color(0xFFF87171),
+                        modifier = Modifier.padding(vertical = 2.dp)
+                    )
+                }
+            }
+            Button(onClick = { detectTick++ }, modifier = Modifier.fillMaxWidth()) {
+                Text("运行环境检测")
+            }
 
             if (!unameLoaded) {
                 Text(
@@ -746,10 +818,6 @@ private fun AppSettingsCard(
                         value = requireBiometric,
                         role = Role.Switch,
                         onValueChange = { newValue ->
-                            if (newValue && !(context.getSystemService(Context.KEYGUARD_SERVICE) as android.app.KeyguardManager).isDeviceSecure) {
-                                Toast.makeText(context, context.getString(R.string.settings_app_lock_no_credential), Toast.LENGTH_SHORT).show()
-                                return@toggleable
-                            }
                             requireBiometric = newValue
                             prefs.edit { putBoolean("enable_biometric_lock", newValue) }
                         }
