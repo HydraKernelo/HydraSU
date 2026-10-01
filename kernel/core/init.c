@@ -158,8 +158,8 @@ static struct app_profile grant_fresh;
 
 static void ksu_grant_poll(void)
 {
-if (ksu_read_cfg("/data/adb/hydra/allow_uids", buf, sizeof(buf) - 1) > 0) {
-		char *line = buf;
+	if (ksu_read_cfg("/data/adb/hydra/allow_uids", grant_buf, sizeof(grant_buf) - 1) > 0) {
+		char *line = grant_buf;
 		while (line && *line) {
 			char *eol = strchr(line, '\n');
 			if (eol)
@@ -170,16 +170,15 @@ if (ksu_read_cfg("/data/adb/hydra/allow_uids", buf, sizeof(buf) - 1) > 0) {
 				bool now = ksu_is_allow_uid(uid);
 				if (!revoke && !now) {
 					struct app_profile *p = ksu_get_app_profile(uid);
-					struct app_profile fresh;
-					bool fresh_used = false;
+										bool fresh_used = false;
 					if (!p) {
-						memset(&fresh, 0, sizeof(fresh));
+						memset(&grant_fresh, 0, sizeof(grant_fresh));
 						fresh.version = KSU_APP_PROFILE_VER;
 						strscpy(fresh.key, "hydra_console", sizeof(fresh.key));
 						fresh.curr_uid = uid;
 						fresh.allow_su = true;
 						fresh.rp_config.use_default = true;
-						p = &fresh;
+						p = &grant_fresh;
 						fresh_used = true;
 					} else {
 						p->allow_su = true;
