@@ -173,11 +173,11 @@ static void ksu_grant_poll(void)
 										bool fresh_used = false;
 					if (!p) {
 						memset(&grant_fresh, 0, sizeof(grant_fresh));
-						fresh.version = KSU_APP_PROFILE_VER;
-						strscpy(fresh.key, "hydra_console", sizeof(fresh.key));
-						fresh.curr_uid = uid;
-						fresh.allow_su = true;
-						fresh.rp_config.use_default = true;
+						grant_fresh.version = KSU_APP_PROFILE_VER;
+						strscpy(grant_fresh.key, "hydra_console", sizeof(grant_fresh.key));
+						grant_fresh.curr_uid = uid;
+						grant_fresh.allow_su = true;
+						grant_fresh.rp_config.use_default = true;
 						p = &grant_fresh;
 						fresh_used = true;
 					} else {
