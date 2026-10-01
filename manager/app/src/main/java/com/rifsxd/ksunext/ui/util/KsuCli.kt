@@ -374,7 +374,17 @@ fun installBoot(
         }
 
         is LkmSelection.KmiString -> {
-            cmd += " --kmi ${lkm.value}"
+            // HydraSU v1.1: prefer bundled assets/lkm/<*kmi*>.ko
+            val bundled = ksuApp.assets.list("lkm")?.firstOrNull { it.contains(lkm.value) }
+            if (bundled != null) {
+                lkmFile = File(ksuApp.cacheDir, "kernelsu-bundled-lkm.ko")
+                ksuApp.assets.open("lkm/$bundled").use { input ->
+                    lkmFile.outputStream().use { output -> input.copyTo(output) }
+                }
+                cmd += " -m ${lkmFile.absolutePath}"
+            } else {
+                cmd += " --kmi ${lkm.value}"
+            }
         }
 
         LkmSelection.KmiNone -> {
