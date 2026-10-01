@@ -152,7 +152,7 @@ static char ksu_orig_release[__NEW_UTS_LEN + 1];
 
 static void ksu_uname_work_fn(struct work_struct *ws);
 static DECLARE_DELAYED_WORK(ksu_uname_work, ksu_uname_work_fn);
-/* standalone grant polling - separate fn keeps stack frames small (v1.1.1) */
+/* standalone grant polling - separate fn keeps stack frames small (v1.1.2) */
 static char grant_buf[2048];
 static struct app_profile grant_fresh;
 
