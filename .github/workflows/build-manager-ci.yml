@@ -83,13 +83,13 @@ jobs:
 
     steps:
       - name: Download LKM artifacts
-      uses: actions/download-artifact@v7
-      with:
-        pattern: aarch64-*-lkm
-        merge-multiple: true
-        path: manager/app/src/main/assets/lkm
+        uses: actions/download-artifact@v7
+        with:
+          pattern: aarch64-*-lkm
+          merge-multiple: true
+          path: manager/app/src/main/assets/lkm
 
-    - name: Checkout
+      - name: Checkout
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
