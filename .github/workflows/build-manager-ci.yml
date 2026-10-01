@@ -2,7 +2,7 @@ name: Build Manager CI
 concurrency:
   group: hydra-ci-${{ github.ref }}
   cancel-in-progress: true
-true:
+on:
   push:
     branches:
     - dev
