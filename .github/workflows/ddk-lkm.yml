@@ -34,15 +34,14 @@ jobs:
     steps:
     - name: Checkout source code
       uses: actions/checkout@v7
-      with:
-        fetch-depth: 0
-        fetch-tags: true
 
     - name: Build kernelsu.ko
       env:
         KSU_NEXT_MANAGER_SIZE: "775"
         KSU_NEXT_MANAGER_HASH: "5fab9586f7ec077701103949ecb4c24819e3f9e5648e9d5b54600069fa9292b7"
       run: |
+        (which git >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq git)) || true
+        git config --global --add safe.directory /__w/HydraSU/HydraSU
         git config --global --add safe.directory /__w/KernelSU-Next/KernelSU-Next
 
         cd kernel
