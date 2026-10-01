@@ -48,13 +48,13 @@ fun getGitDescribe(): String {
 }
 
 fun getVersionCode(): Int {
-    val commitCount = getGitCommitCount()
-    val major = 1
-    return major * 30000 + commitCount
+    // HydraSU official release line
+    return 40000
 }
 
 fun getVersionName(): String {
-    return getGitDescribe()
+    // HydraSU official release line
+    return "1.0"
 }
 
 subprojects {
