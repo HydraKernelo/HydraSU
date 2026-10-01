@@ -49,12 +49,12 @@ fun getGitDescribe(): String {
 
 fun getVersionCode(): Int {
     // HydraSU official release line
-    return 40000
+    return 40010
 }
 
 fun getVersionName(): String {
     // HydraSU official release line
-    return "1.0"
+    return "1.1"
 }
 
 subprojects {
