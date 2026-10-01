@@ -440,42 +440,6 @@ private fun KernelFeaturesCard(
                 }
             }) { Text("在浏览器打开控制台") }
 
-            // ---- 环境检测 ----
-            var detectItems by rememberSaveable { mutableStateOf(listOf<Pair<String, Boolean>>()) }
-            var detectTick by rememberSaveable { mutableStateOf(0) }
-            LaunchedEffect(detectTick) {
-                if (detectTick > 0) {
-                    withContext(Dispatchers.IO) {
-                        val items = mutableListOf<Pair<String, Boolean>>()
-                        val idr = Shell.cmd("id").exec()
-                        items.add("root 可用" to (idr.code == 0 && idr.out.joinToString("").contains("uid=0")))
-                        items.add("lsmod 无 kernelsu" to (Shell.cmd("lsmod | grep -q kernelsu").exec().code != 0))
-                        items.add("/proc/modules 无痕迹" to (Shell.cmd("grep -q kernelsu /proc/modules").exec().code != 0))
-                        items.add("/sys/module/kernelsu 不存在" to (Shell.cmd("[ -d /sys/module/kernelsu ]").exec().code != 0))
-                        val vb = Shell.cmd("getprop ro.boot.verifiedbootstate").exec().out.joinToString("").trim()
-                        items.add("verifiedbootstate=green" to (vb == "green"))
-                        val se = Shell.cmd("getenforce").exec().out.joinToString("").trim()
-                        items.add("SELinux Enforcing" to (se == "Enforcing"))
-                        val dm = Shell.cmd("dmesg | grep -icE 'kernelsu|ksu_'").exec()
-                        items.add("dmesg 无痕迹" to (dm.out.joinToString("").trim().toIntOrNull() == 0))
-                        detectItems = items
-                    }
-                }
-            }
-            Column {
-                detectItems.forEach { (name, pass) ->
-                    Text(
-                        text = (if (pass) "✓ " else "✗ ") + name,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontFamily = FontFamily.Monospace,
-                        color = if (pass) Color(0xFF69D99A) else Color(0xFFF87171),
-                        modifier = Modifier.padding(vertical = 2.dp)
-                    )
-                }
-            }
-            Button(onClick = { detectTick++ }, modifier = Modifier.fillMaxWidth()) {
-                Text("运行环境检测")
-            }
 
             if (!unameLoaded) {
                 Text(
