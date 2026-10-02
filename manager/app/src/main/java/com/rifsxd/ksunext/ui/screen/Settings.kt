@@ -254,6 +254,11 @@ private fun KernelFeaturesCard(
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)),
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent)
             ) {
+                // 与极致隐藏互斥：开启寄生前检查
+                if (it && parasiteCtx.getSharedPreferences("ultstealth", Context.MODE_PRIVATE).getBoolean("enabled", false)) {
+                    Toast.makeText(parasiteCtx, "「极致隐藏」开启中，二者不可同时使用；请先关闭极致隐藏", Toast.LENGTH_LONG).show()
+                    return@SwitchItem
+                }
                 parasiteCtx.getSharedPreferences("parasite", Context.MODE_PRIVATE)
                     .edit().putBoolean("enabled", it).apply()
                 parasiteEnabled = it
@@ -268,6 +273,80 @@ private fun KernelFeaturesCard(
                 } else {
                     parasiteCtx.stopService(Intent(parasiteCtx, com.rifsxd.ksunext.ParasiteService::class.java))
                     Toast.makeText(parasiteCtx, "寄生工作台已停止", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            // ---- 极致隐藏（无管理器模式）----
+            val ultPrefs = remember { parasiteCtx.getSharedPreferences("ultstealth", Context.MODE_PRIVATE) }
+            var ultOn by rememberSaveable { mutableStateOf(ultPrefs.getBoolean("enabled", false)) }
+            var ultBusy by rememberSaveable { mutableStateOf(false) }
+            SwitchItem(
+                icon = Icons.Filled.Security,
+                title = "极致隐藏 · 无管理器模式",
+                summary = "自动刷入双内置模块 · 删除管理器后浏览器管理 root · 与寄生工作台互斥",
+                checked = ultOn,
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)),
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+            ) {
+                if (ultBusy) {
+                    Toast.makeText(parasiteCtx, "正在刷入模块，请稍候…", Toast.LENGTH_SHORT).show()
+                    return@SwitchItem
+                }
+                if (it) {
+                    if (parasiteEnabled) {
+                        Toast.makeText(parasiteCtx, "「寄生工作台」开启中，二者不可同时使用；请先关闭寄生工作台", Toast.LENGTH_LONG).show()
+                        return@SwitchItem
+                    }
+                    android.app.AlertDialog.Builder(parasiteCtx)
+                        .setTitle("极致隐藏 · 无管理器模式")
+                        .setMessage("开启后 HydraSU 将从桌面消失，root 管理全部在浏览器完成。\n\n" +
+                                "将自动刷入两个内置模块：\n" +
+                                "① AutoStart —— 开机自检，静默接管本地服务\n" +
+                                "② 独立控制台 —— 无管理器全功能控制台（root 授权 / 模块 / 日志 / 终端）\n\n" +
+                                "使用流程：\n" +
+                                "1. 确认刷入并重启\n" +
+                                "2. 重启后回到本页，记下「控制台访问密钥」并复制完整地址保存（Token 务必记住）\n" +
+                                "3. 卸载 HydraSU 管理器\n" +
+                                "4. 任意浏览器访问 http://127.0.0.1:38214/ ，输入 Token 即可管理 root\n\n" +
+                                "注意：与「寄生工作台」互斥，不可同时开启；关闭本开关不会卸载已刷入的模块。")
+                        .setPositiveButton("确认刷入") { _, _ ->
+                            ultBusy = true
+                            Thread {
+                                var ok1 = false
+                                var ok2 = false
+                                try {
+                                    val jobs = listOf(
+                                        "modules/HydraSU_AutoStart_v2.4.zip" to "ult_autostart.zip",
+                                        "modules/HydraSU_Standalone_Console_v3.2.zip" to "ult_console.zip")
+                                    for ((asset, name) in jobs) {
+                                        val f = java.io.File(parasiteCtx.cacheDir, name)
+                                        parasiteCtx.assets.open(asset).use { input ->
+                                            java.io.FileOutputStream(f).use { output -> input.copyTo(output) }
+                                        }
+                                        val r = Shell.cmd("/data/adb/ksu/bin/ksud module install '" + f.absolutePath + "'").exec()
+                                        f.delete()
+                                        if (name == "ult_autostart.zip") ok1 = r.code == 0 else ok2 = r.code == 0
+                                    }
+                                } catch (_: Throwable) {
+                                }
+                                android.os.Handler(parasiteCtx.mainLooper).post {
+                                    ultBusy = false
+                                    if (ok1 && ok2) {
+                                        ultPrefs.edit().putBoolean("enabled", true).apply()
+                                        ultOn = true
+                                        Toast.makeText(parasiteCtx, "双模块已刷入 · 重启生效；重启后回本页复制控制台 Token，之后即可卸载管理器", Toast.LENGTH_LONG).show()
+                                    } else {
+                                        Toast.makeText(parasiteCtx, "刷入失败（AutoStart=" + ok1 + " / Console=" + ok2 + "），请检查 root 权限", Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                            }.start()
+                        }
+                        .setNegativeButton("取消", null)
+                        .show()
+                } else {
+                    ultPrefs.edit().putBoolean("enabled", false).apply()
+                    ultOn = false
+                    Toast.makeText(parasiteCtx, "极致隐藏已关闭（已刷入的模块可在模块页手动卸载）", Toast.LENGTH_LONG).show()
                 }
             }
 
