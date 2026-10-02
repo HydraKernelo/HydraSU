@@ -67,6 +67,13 @@ class ParasiteService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // 寄生工作台开关关闭时拒绝运行：无论谁拉起（应用自启/系统重启/AutoStart 模块保活循环），一律自杀
+        val switchOn = getSharedPreferences("parasite", MODE_PRIVATE).getBoolean("enabled", true)
+        if (!switchOn) {
+            try { stopForeground(true) } catch (_: Exception) {}
+            stopSelf()
+            return START_NOT_STICKY
+        }
         if (server == null) Thread { serve() }.start()
         // 通知仅在管理器前台启动时显示；模块静默拉起则无通知
         if (intent?.getBooleanExtra("notify", false) == true) startForegroundNotice()
