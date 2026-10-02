@@ -90,6 +90,7 @@ git checkout dev
 | [FolkPatch](https://github.com/LyraVoid/FolkPatch) | 路径隐藏实现参考 |
 | HydraKernelo | HydraSU 维护者（与 青凤） |
 | QQ 群友 | happy / 我的错 / 晚雾渡星河 / 沐神 / 爱吃肉的棒男孩 |
+还有7kimi的浏览器控制参考
 
 ---
 
