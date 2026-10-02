@@ -48,12 +48,16 @@ fun getGitDescribe(): String {
 }
 
 fun getVersionCode(): Int {
-    // HydraSU official release line
+    // HydraSU official release line - reads repo file; bump per release (+1)
+    val vf = file("VERSION_CODE")
+    if (vf.exists()) return vf.readText().trim().toInt()
     return 40020
 }
 
 fun getVersionName(): String {
-    // HydraSU official release line
+    // HydraSU official release line - reads repo file; bump per release (+0.01)
+    val vf = file("VERSION")
+    if (vf.exists()) return vf.readText().trim()
     return "1.2"
 }
 
