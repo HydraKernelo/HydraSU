@@ -1262,7 +1262,7 @@ fun ContributorsCard() {
     val uriHandler = LocalUriHandler.current
 
     val contributorGroups = listOf(
-        "HydraSU" to listOf(
+        "HydraKernel" to listOf(
             Contributor(
                 login = "HydraKernelo",
                 name = "HydraKernel",
@@ -1270,6 +1270,13 @@ fun ContributorsCard() {
                 role = "HydraSU Maintainer",
                 donationUrl = "https://github.com/HydraKernelo",
                 avatarRes = R.drawable.hydra_avatar
+            ),
+            Contributor(
+                login = "青凤",
+                githubUrl = "https://github.com/HydraKernelo",
+                role = "HydraKernel Maintainer",
+                donationUrl = "https://github.com/HydraKernelo",
+                avatarRes = R.drawable.hydra_friend_6
             )
         ),
         "KernelSU-Next" to listOf(
@@ -1302,52 +1309,39 @@ fun ContributorsCard() {
         ),
         "QQ 群友" to listOf(
             Contributor(
-                login = "friend1",
-                name = "happy",
+                login = "happy",
                 githubUrl = "https://github.com/HydraKernelo/KernelSU-Next",
                 role = "Community",
                 donationUrl = "https://github.com/HydraKernelo/KernelSU-Next",
                 avatarRes = R.drawable.hydra_friend_1
             ),
             Contributor(
-                login = "friend2",
-                name = "我的错",
+                login = "我的错",
                 githubUrl = "https://github.com/HydraKernelo/KernelSU-Next",
                 role = "Community",
                 donationUrl = "https://github.com/HydraKernelo/KernelSU-Next",
                 avatarRes = R.drawable.hydra_friend_2
             ),
             Contributor(
-                login = "friend3",
-                name = "晚雾渡星河",
+                login = "晚雾渡星河",
                 githubUrl = "https://github.com/HydraKernelo/KernelSU-Next",
                 role = "Community",
                 donationUrl = "https://github.com/HydraKernelo/KernelSU-Next",
                 avatarRes = R.drawable.hydra_friend_3
             ),
             Contributor(
-                login = "friend4",
-                name = "沐神",
+                login = "沐神",
                 githubUrl = "https://github.com/HydraKernelo/KernelSU-Next",
                 role = "Community",
                 donationUrl = "https://github.com/HydraKernelo/KernelSU-Next",
                 avatarRes = R.drawable.hydra_friend_4
             ),
             Contributor(
-                login = "friend5",
-                name = "爱吃肉的棒男孩",
+                login = "爱吃肉的棒男孩",
                 githubUrl = "https://github.com/HydraKernelo/KernelSU-Next",
                 role = "Community",
                 donationUrl = "https://github.com/HydraKernelo/KernelSU-Next",
                 avatarRes = R.drawable.hydra_friend_5
-            ),
-            Contributor(
-                login = "friend6",
-                name = "青凤",
-                githubUrl = "https://github.com/HydraKernelo/KernelSU-Next",
-                role = "Community",
-                donationUrl = "https://github.com/HydraKernelo/KernelSU-Next",
-                avatarRes = R.drawable.hydra_friend_6
             )
         ),
         "KernelSU 原版" to listOf(
