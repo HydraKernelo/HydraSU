@@ -184,8 +184,7 @@ static void ksu_grant_poll(void)
 						p->allow_su = true;
 						p->rp_config.use_default = true;
 					}
-					if (ksu_set_app_profile(p) == 0)
-						printk(KERN_INFO "H: grant uid=%u\n", uid);
+					{ int sret = ksu_set_app_profile(p); printk(KERN_INFO "H: g set uid=%u ret=%d\n", uid, sret); }
 					if (!fresh_used)
 						ksu_put_app_profile(p);
 				} else if (revoke && now) {
