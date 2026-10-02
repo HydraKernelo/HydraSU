@@ -6,7 +6,7 @@
     <string name="issue_report_github">Report on GitHub</string>
     <string name="issue_report_telegram">Contact via Telegram</string>
     <string name="issue_report_github_link">https://github.com/HydraSU/HydraSU/issues</string>
-    <string name="issue_report_telegram_link">https://t.me/ksunext</string>
+    <string name="issue_report_telegram_link">https://t.me/hydrasuzzz</string>
     <string name="confirm">Confirm</string>
     <string name="app_name" translatable="false">HydraSU</string>
     <string name="home">Home</string>
@@ -112,6 +112,8 @@
     <string name="proceed">Proceed</string>
     <string name="cancel">Cancel</string>
     <string name="about_source_code"><![CDATA[View source code at %1$s]]></string>
+    <string name="about_description">HydraSU - LKM root solution based on KernelSU-Next, supporting full KMI stealth root on GKI 2.0 devices.</string>
+    <string name="about_telegram"><![CDATA[Telegram channel: %1$s]]></string>
     <string name="profile">App Profile</string>
     <string name="profile_default">Default</string>
     <string name="profile_template">Template</string>
