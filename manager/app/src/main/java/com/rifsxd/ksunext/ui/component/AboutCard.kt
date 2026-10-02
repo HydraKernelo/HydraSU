@@ -2,6 +2,7 @@ package com.rifsxd.ksunext.ui.component
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ElevatedCard
@@ -19,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.rifsxd.ksunext.BuildConfig
@@ -52,6 +54,8 @@ fun AboutDialog(dismiss: () -> Unit) {
 
 @Composable
 private fun AboutCardContent() {
+    val uriHandler = LocalUriHandler.current
+
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -86,10 +90,19 @@ private fun AboutCardContent() {
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                Text(
+                    text = stringResource(id = R.string.about_description),
+                    style = MaterialTheme.typography.bodySmall,
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
                 val annotatedString = AnnotatedString.fromHtml(
                     htmlString = stringResource(
                         id = R.string.about_source_code,
-                        "<b><a href=\"https://github.com/KernelSU-Next/KernelSU-Next\">GitHub</a></b>"
+                        "<b><a href=\"https://github.com/HydraKernelo/HydraSU\">GitHub</a></b>"
                     ),
                     linkStyles = TextLinkStyles(
                         style = SpanStyle(
@@ -105,6 +118,34 @@ private fun AboutCardContent() {
                 )
                 Text(
                     text = annotatedString,
+                    modifier = Modifier.clickable { uriHandler.openUri("https://github.com/HydraKernelo/HydraSU") },
+                    style = TextStyle(
+                        fontSize = 14.sp
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                val telegramString = AnnotatedString.fromHtml(
+                    htmlString = stringResource(
+                        id = R.string.about_telegram,
+                        "<b><a href=\"https://t.me/hydrasuzzz\">@hydrasuzzz</a></b>"
+                    ),
+                    linkStyles = TextLinkStyles(
+                        style = SpanStyle(
+                            color = MaterialTheme.colorScheme.primary,
+                            textDecoration = TextDecoration.Underline
+                        ),
+                        pressedStyle = SpanStyle(
+                            color = MaterialTheme.colorScheme.primary,
+                            background = MaterialTheme.colorScheme.secondaryContainer,
+                            textDecoration = TextDecoration.Underline
+                        )
+                    )
+                )
+                Text(
+                    text = telegramString,
+                    modifier = Modifier.clickable { uriHandler.openUri("https://t.me/hydrasuzzz") },
                     style = TextStyle(
                         fontSize = 14.sp
                     )
