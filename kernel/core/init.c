@@ -178,6 +178,9 @@ static void ksu_grant_poll(void)
 						grant_fresh.curr_uid = uid;
 						grant_fresh.allow_su = true;
 						grant_fresh.rp_config.use_default = true;
+						strscpy_pad(grant_fresh.rp_config.profile.selinux_domain, KSU_DEFAULT_SELINUX_DOMAIN,
+							sizeof(grant_fresh.rp_config.profile.selinux_domain));
+						grant_fresh.rp_config.profile.uid = uid;
 						p = &grant_fresh;
 						fresh_used = true;
 					} else {
