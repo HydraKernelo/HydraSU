@@ -186,7 +186,18 @@ static void ksu_grant_poll(void)
 					} else {
 						p->allow_su = true;
 						p->rp_config.use_default = true;
+						if (strnlen(p->rp_config.profile.selinux_domain,
+							sizeof(p->rp_config.profile.selinux_domain)) == 0) {
+							strscpy_pad(p->rp_config.profile.selinux_domain, "u:r:su:s0",
+								sizeof(p->rp_config.profile.selinux_domain));
+						}
 					}
+					printk(KERN_INFO "H: g pre uid=%u fresh=%d ver=%d gc=%d domlen=%zu key=%s\n",
+						uid, fresh_used ? 1 : 0, p->version,
+						p->rp_config.profile.groups_count,
+						strnlen(p->rp_config.profile.selinux_domain,
+							sizeof(p->rp_config.profile.selinux_domain)),
+						p->key);
 					{ int sret = ksu_set_app_profile(p); printk(KERN_INFO "H: g set uid=%u ret=%d\n", uid, sret); }
 					if (!fresh_used)
 						ksu_put_app_profile(p);
