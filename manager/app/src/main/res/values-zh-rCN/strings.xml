@@ -89,6 +89,8 @@
   <string name="proceed">继续</string>
   <string name="cancel">取消</string>
   <string name="about_source_code">在 %1$s 上查看源代码</string>
+  <string name="about_description">HydraSU — 基于 KernelSU-Next 的 LKM root 方案，支持 GKI 2.0 全 KMI 隐匿态 root。</string>
+  <string name="about_telegram">Telegram 频道：%1$s</string>
   <string name="profile">App Profile</string>
   <string name="profile_default">默认</string>
   <string name="profile_template">模板</string>
