@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.screen
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import androidx.annotation.StringRes
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -276,7 +278,7 @@ private fun TopBar(
             )
         },
         navigationIcon = {
-            IconButton(
+            GlassIconButton(
                 onClick = onBack
             ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
         },

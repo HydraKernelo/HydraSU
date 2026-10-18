@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.component
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -69,7 +71,7 @@ fun ShortcutDialog(
     }
 
     Dialog(onDismissRequest = onDismiss) {
-        Card(
+        GlassCard(
             modifier = Modifier.fillMaxWidth(0.95f),
         ) {
             Column(
@@ -121,7 +123,7 @@ fun ShortcutDialog(
                 )
 
                 // Icon Picker
-                OutlinedButton(
+                GlassOutlinedButton(
                     onClick = { launcher.launch("image/*") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
@@ -196,7 +198,7 @@ fun ShortcutDialog(
                         }
 
                         if (iconUri != null) {
-                            IconButton(onClick = { iconUri = null }) {
+                            GlassIconButton(onClick = { iconUri = null }) {
                                 Icon(
                                     imageVector = Icons.Filled.Close,
                                     contentDescription = null,
@@ -223,7 +225,7 @@ fun ShortcutDialog(
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(
+                    GlassTextButton(
                         onClick = onDismiss,
                         modifier = Modifier.padding(end = 8.dp)
                     ) {
@@ -233,7 +235,7 @@ fun ShortcutDialog(
                         )
                     }
                     
-                    Button(
+                    GlassButton(
                         onClick = { onConfirm(name, iconUri) },
                         enabled = name.isNotBlank(),
                         shape = RoundedCornerShape(12.dp),

@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.screen.sulog
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.foundation.background
@@ -132,7 +134,7 @@ fun SuLogScreen(
                 onClearClick = { actions.onSearchTextChange("") },
                 onBackClick = actions.onBack,
                 actionsContent = {
-                    IconButton(onClick = actions.onCleanFile) {
+                    GlassIconButton(onClick = actions.onCleanFile) {
                         Icon(
                             imageVector = Icons.Filled.DeleteSweep,
                             contentDescription = stringResource(R.string.sulog_clean_title),
@@ -142,7 +144,7 @@ fun SuLogScreen(
                 dropdownContent = {
                     var showFilterMenu by remember { mutableStateOf(false) }
 
-                    IconButton(
+                    GlassIconButton(
                         onClick = { showFilterMenu = true },
                     ) {
                         Icon(
@@ -292,7 +294,7 @@ private fun LazyListScope.sulogEntriesSection(
 
         else -> {
             itemsIndexed(entries, key = { index, entry -> "$index-${entry.key}" }) { index, entry ->
-                Card(
+                GlassCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(MaterialTheme.shapes.medium)
@@ -388,7 +390,7 @@ private fun SulogStatusSection(
             WarningCard(
                 text = stringResource(R.string.sulog_disabled_title),
                 action = {
-                    Button(
+                    GlassButton(
                         onClick = actions.onEnableSulog,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.error,
@@ -435,7 +437,7 @@ private fun WarningCard(
     text: String,
     action: (@Composable () -> Unit)? = null,
 ) {
-    Card(
+    GlassCard(
         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
     ) {
@@ -479,7 +481,7 @@ private fun SulogDetailDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) {
+            GlassTextButton(onClick = onDismiss) {
                 Text(stringResource(android.R.string.ok))
             }
         },

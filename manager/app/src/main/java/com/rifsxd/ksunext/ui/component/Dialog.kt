@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.component
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import android.graphics.text.LineBreaker
 import android.os.Build
 import android.os.Parcelable
@@ -8,9 +10,16 @@ import android.text.method.LinkMovementMethod
 import android.util.Log
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -398,35 +407,42 @@ private fun LoadingDialog() {
 
 @Composable
 private fun ConfirmDialog(visuals: ConfirmDialogVisuals, confirm: () -> Unit, dismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = {
-            dismiss()
-        },
-        title = {
-            Text(
-                text = visuals.title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-        },
-        text = {
-            if (visuals.isMarkdown) {
-                MarkdownContent(content = visuals.content)
-            } else {
-                Text(text = visuals.content)
+    Dialog(onDismissRequest = { dismiss() }) {
+        LiquidGlassSurface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(28.dp),
+            elevation = 16.dp,
+            style = rememberLiquidGlassStyle(),
+        ) {
+            Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp)) {
+                Text(
+                    text = visuals.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(Modifier.height(12.dp))
+                if (visuals.isMarkdown) {
+                    MarkdownContent(content = visuals.content)
+                } else {
+                    Text(text = visuals.content)
+                }
+                Spacer(Modifier.height(18.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    GlassTextButton(onClick = dismiss) {
+                        Text(text = visuals.dismiss ?: stringResource(id = android.R.string.cancel))
+                    }
+                    Spacer(Modifier.width(6.dp))
+                    GlassTextButton(onClick = confirm) {
+                        Text(text = visuals.confirm ?: stringResource(id = android.R.string.ok))
+                    }
+                }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = confirm) {
-                Text(text = visuals.confirm ?: stringResource(id = android.R.string.ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = dismiss) {
-                Text(text = visuals.dismiss ?: stringResource(id = android.R.string.cancel))
-            }
-        },
-    )
+        }
+    }
 }
 
 @Composable

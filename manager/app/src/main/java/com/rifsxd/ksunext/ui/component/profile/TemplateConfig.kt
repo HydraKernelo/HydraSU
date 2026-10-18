@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.component.profile
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReadMore
@@ -51,7 +53,7 @@ fun TemplateConfig(
                 onValueChange = {},
                 trailingIcon = {
                     if (noTemplates) {
-                        IconButton(
+                        GlassIconButton(
                             onClick = onManageTemplate
                         ) {
                             Icon(Icons.Filled.Create, null)
@@ -91,7 +93,7 @@ fun TemplateConfig(
                             expanded = false
                         },
                         trailingIcon = {
-                            IconButton(onClick = {
+                            GlassIconButton(onClick = {
                                 onViewTemplate(tid)
                             }) {
                                 Icon(Icons.AutoMirrored.Filled.ReadMore, null)

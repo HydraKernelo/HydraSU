@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.screen
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import android.content.Context
 import android.os.Environment
 import androidx.activity.compose.BackHandler
@@ -162,13 +164,13 @@ private fun TopBar(isActionRunning: Boolean, onBack: () -> Unit = {}, onSave: ()
                 fontWeight = FontWeight.Black,
             ) },
         navigationIcon = {
-            IconButton(
+            GlassIconButton(
                 onClick = onBack,
                 enabled = !isActionRunning
             ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
         },
         actions = {
-            IconButton(
+            GlassIconButton(
                 onClick = onSave,
                 enabled = !isActionRunning
             ) {

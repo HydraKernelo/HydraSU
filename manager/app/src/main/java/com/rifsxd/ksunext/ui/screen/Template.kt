@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.screen
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import android.content.ClipData
 import android.widget.Toast
 import androidx.compose.animation.*
@@ -273,12 +275,12 @@ private fun TopBar(
             )
         },
         navigationIcon = {
-            IconButton(
+            GlassIconButton(
                 onClick = onBack
             ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
         },
         actions = {
-            IconButton(onClick = onCreate) {
+            GlassIconButton(onClick = onCreate) {
                 Icon(
                     Icons.Filled.Add,
                     contentDescription = stringResource(id = R.string.app_profile_template_create)
@@ -286,7 +288,7 @@ private fun TopBar(
             }
 
             var showDropdown by remember { mutableStateOf(false) }
-            IconButton(onClick = {
+            GlassIconButton(onClick = {
                 showDropdown = true
             }) {
                 Icon(

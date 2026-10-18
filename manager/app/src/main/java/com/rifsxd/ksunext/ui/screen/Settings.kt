@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.screen
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -234,7 +236,7 @@ private fun KernelFeaturesCard(
     val selinuxHideSupported = selinuxHideStatus == "supported"
     val avcSpoofSupported = avcSpoofStatus == "supported"
 
-    Card(modifier = Modifier.fillMaxWidth()) {
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -716,7 +718,7 @@ private fun SecurityCard(
     navigator: DestinationsNavigator,
     loadingDialog: LoadingDialogHandle
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -812,7 +814,7 @@ private fun AppSettingsCard(
     context: android.content.Context,
     isUnrooted: Boolean
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -1030,7 +1032,7 @@ private fun ExportLogBottomSheet(
                         modifier = Modifier.padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        IconButton(
+                        GlassIconButton(
                             onClick = onSave,
                             modifier = Modifier.size(56.dp).clip(CircleShape)
                         ) {
@@ -1053,7 +1055,7 @@ private fun ExportLogBottomSheet(
                         modifier = Modifier.padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        IconButton(
+                        GlassIconButton(
                             onClick = onShare,
                             modifier = Modifier.size(56.dp).clip(CircleShape)
                         ) {

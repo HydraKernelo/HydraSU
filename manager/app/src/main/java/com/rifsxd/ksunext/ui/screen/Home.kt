@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.screen
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import androidx.core.net.toUri
 import androidx.compose.foundation.Image
 import androidx.compose.ui.platform.LocalUriHandler
@@ -288,7 +290,7 @@ fun HomeScreen(navigator: DestinationsNavigator) {
 @Composable
 private fun SuperuserCard(onClick: (() -> Unit)? = null) {
     val count = getSuperuserCount()
-    ElevatedCard(
+    GlassCard(
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer
         ),
@@ -348,7 +350,7 @@ private fun ModuleCard(onClick: (() -> Unit)? = null) {
         }
     }
 
-    ElevatedCard(
+    GlassCard(
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer
         ),
@@ -456,7 +458,7 @@ fun UpdateCard() {
         exit = shrinkVertically() + fadeOut()
     ) {
         val updateDialog = rememberConfirmDialog(onConfirm = { uriHandler.openUri(newVersionUrl) })
-        ElevatedCard(
+        GlassCard(
             modifier = Modifier.clickable {
                 if (changelog.isEmpty()) {
                     uriHandler.openUri(newVersionUrl)
@@ -526,7 +528,7 @@ fun UpdateCard() {
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         if (!preferSpoofed) {
-                            FilledTonalButton(
+                            GlassFilledTonalButton(
                                 onClick = { preferSpoofed = false },
                                 modifier = Modifier
                                     .weight(1f)
@@ -550,7 +552,7 @@ fun UpdateCard() {
                                 }
                             }
                         } else {
-                            FilledTonalButton(
+                            GlassFilledTonalButton(
                                 onClick = { preferSpoofed = false },
                                 modifier = Modifier
                                     .weight(1f)
@@ -576,7 +578,7 @@ fun UpdateCard() {
                         }
                         
                         if (preferSpoofed) {
-                            FilledTonalButton(
+                            GlassFilledTonalButton(
                                 onClick = { preferSpoofed = true },
                                 modifier = Modifier
                                     .weight(1f)
@@ -600,7 +602,7 @@ fun UpdateCard() {
                                 }
                             }
                         } else {
-                            FilledTonalButton(
+                            GlassFilledTonalButton(
                                 onClick = { preferSpoofed = true },
                                 modifier = Modifier
                                     .weight(1f)
@@ -716,7 +718,7 @@ private fun TopBar(
         },
         actions = {
             if (!navBarEnabled) {
-                IconButton(onClick = onSettingsClick) {
+                GlassIconButton(onClick = onSettingsClick) {
                     Icon(
                         imageVector = Icons.Filled.Settings,
                         contentDescription = stringResource(id = R.string.settings)
@@ -725,7 +727,7 @@ private fun TopBar(
             }
 
             if (ksuVersion != null) {
-                IconButton(onClick = onInstallClick) {
+                GlassIconButton(onClick = onInstallClick) {
                     Icon(
                         imageVector = Icons.Filled.Archive,
                         contentDescription = stringResource(id = R.string.install)
@@ -735,7 +737,7 @@ private fun TopBar(
 
             if (ksuVersion != null) {
                 var showDropdown by remember { mutableStateOf(false) }
-                IconButton(onClick = {
+                GlassIconButton(onClick = {
                     showDropdown = true
                 }) {
                     Icon(
@@ -781,7 +783,7 @@ private fun StatusCard(
 ) {
     val context = LocalContext.current
 
-    ElevatedCard(
+    GlassCard(
         colors = CardDefaults.elevatedCardColors(containerColor = run {
             if (ksuVersionParam != null) MaterialTheme.colorScheme.primary
             else if (kernelVersionParam.isGKI()) MaterialTheme.colorScheme.secondaryContainer
@@ -972,7 +974,7 @@ private fun StatusCard(
 fun WarningCard(
     message: String, color: Color = MaterialTheme.colorScheme.error, onClick: (() -> Unit)? = null
 ) {
-    ElevatedCard(
+    GlassCard(
         colors = CardDefaults.elevatedCardColors(
             containerColor = color
         )
@@ -1230,7 +1232,7 @@ private fun InfoCard(autoExpand: Boolean = false) {
                         animationSpec = tween(durationMillis = 300)
                     )
 
-                    IconButton(
+                    GlassIconButton(
                         onClick = { expanded = !expanded },
                         modifier = Modifier.size(36.dp)
                     ) {
@@ -1475,7 +1477,7 @@ private fun ContributorRow(
             }
         }
 
-        OutlinedButton(
+        GlassOutlinedButton(
             onClick = onDonateClick,
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
             modifier = Modifier.height(30.dp),
@@ -1529,13 +1531,13 @@ fun IssueReportCard() {
                 )
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                IconButton(onClick = { uriHandler.openUri(githubIssueUrl) }) {
+                GlassIconButton(onClick = { uriHandler.openUri(githubIssueUrl) }) {
                     Icon(
                         painter = painterResource(R.drawable.ic_github),
                         contentDescription = stringResource(R.string.issue_report_github),
                     )
                 }
-                IconButton(onClick = { uriHandler.openUri(telegramUrl) }) {
+                GlassIconButton(onClick = { uriHandler.openUri(telegramUrl) }) {
                     Icon(
                         painter = painterResource(R.drawable.ic_telegram),
                         contentDescription = stringResource(R.string.issue_report_telegram),

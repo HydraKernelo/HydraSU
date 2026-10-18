@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.component
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
@@ -29,7 +31,7 @@ import com.rifsxd.ksunext.R
 @Preview
 @Composable
 fun AboutCard() {
-    ElevatedCard(
+    GlassCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp)
     ) {

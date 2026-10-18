@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.screen
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -282,7 +284,7 @@ private fun TopBar(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Black,
             ) }, navigationIcon = {
-            IconButton(
+            GlassIconButton(
                 onClick = onBack
             ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
         },

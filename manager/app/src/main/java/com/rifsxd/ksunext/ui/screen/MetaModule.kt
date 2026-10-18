@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.screen
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -333,7 +335,7 @@ fun MetaModuleScreen(navigator: DestinationsNavigator) {
                             text = stringResource(R.string.error_loading_modules),
                             style = MaterialTheme.typography.titleMedium
                         )
-                        Button(
+                        GlassButton(
                             onClick = {
                                 scope.launch {
                                     moduleState = MetaModuleState.Loading
@@ -361,7 +363,7 @@ private fun MetaModuleCard(
     onDownload: (MetaModule) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    GlassCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onCardClick() }
@@ -551,7 +553,7 @@ private fun MetaModuleCard(
                         )
                     }
 
-                    Button(
+                    GlassButton(
                         onClick = { onDownload(module) },
                         modifier = Modifier.defaultMinSize(52.dp, 32.dp),
                         enabled = module.downloadUrl.isNotEmpty() && isInstallEnabled,
@@ -600,7 +602,7 @@ private fun TopBar(
             )
         },
         navigationIcon = {
-            IconButton(onClick = onBack) {
+            GlassIconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
             }
         },

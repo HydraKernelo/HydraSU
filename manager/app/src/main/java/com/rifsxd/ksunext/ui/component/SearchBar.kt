@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.component
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -79,7 +81,7 @@ fun SearchAppBar(
                         value = searchText,
                         onValueChange = onSearchTextChange,
                         trailingIcon = {
-                            IconButton(
+                            GlassIconButton(
                                 onClick = {
                                     onSearch = false
                                     keyboardController?.hide()
@@ -101,7 +103,7 @@ fun SearchAppBar(
         },
         navigationIcon = {
             if (onBackClick != null) {
-                IconButton(
+                GlassIconButton(
                     onClick = onBackClick,
                     content = { Icon(Icons.AutoMirrored.Outlined.ArrowBack, null) }
                 )
@@ -116,7 +118,7 @@ fun SearchAppBar(
                         actionsContent()
                     }
 
-                    IconButton(
+                    GlassIconButton(
                         onClick = { onSearch = true },
                         content = { Icon(Icons.Filled.Search, null) }
                     )

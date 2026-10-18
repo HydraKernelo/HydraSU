@@ -68,6 +68,8 @@ import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
 import com.rifsxd.ksunext.Natives
 import com.rifsxd.ksunext.R
 import com.rifsxd.ksunext.ksuApp
+import com.rifsxd.ksunext.ui.component.liquid.LiquidGlassSurface
+import com.rifsxd.ksunext.ui.component.liquid.rememberLiquidGlassStyle
 import com.rifsxd.ksunext.ui.screen.BottomBarDestination
 import com.rifsxd.ksunext.ui.screen.FlashIt
 import com.rifsxd.ksunext.ui.theme.KernelSUTheme
@@ -769,11 +771,11 @@ private fun BottomBar(
                 .padding(horizontal = horizontalScreenPadding, vertical = 14.dp),
             contentAlignment = Alignment.Center
         ) {
-            Surface(
+            LiquidGlassSurface(
                 modifier = Modifier.wrapContentWidth(),
                 shape = RoundedCornerShape(24.dp),
-                tonalElevation = 3.dp,
-                shadowElevation = 8.dp
+                elevation = 10.dp,
+                style = rememberLiquidGlassStyle(),
             ) {
                 val itemSize = 56.dp
                 val itemSpacing = 4.dp

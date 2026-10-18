@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.screen
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.net.Uri
@@ -406,7 +408,7 @@ private fun TopBar(
             )
         },
         navigationIcon = {
-            IconButton(onClick = onBack) {
+            GlassIconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
             }
         },

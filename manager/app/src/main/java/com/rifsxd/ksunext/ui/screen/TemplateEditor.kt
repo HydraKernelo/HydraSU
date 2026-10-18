@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.screen
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
@@ -296,20 +298,20 @@ private fun TopBar(
                 }
             }
         }, navigationIcon = {
-            IconButton(
+            GlassIconButton(
                 onClick = onBack
             ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
         }, actions = {
             if (readOnly) {
                 return@TopAppBar
             }
-            IconButton(onClick = onDelete) {
+            GlassIconButton(onClick = onDelete) {
                 Icon(
                     Icons.Filled.DeleteForever,
                     contentDescription = stringResource(id = R.string.app_profile_template_delete)
                 )
             }
-            IconButton(onClick = onSave) {
+            GlassIconButton(onClick = onSave) {
                 Icon(
                     imageVector = Icons.Filled.Save,
                     contentDescription = stringResource(id = R.string.app_profile_template_save)

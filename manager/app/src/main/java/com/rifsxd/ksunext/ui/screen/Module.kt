@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.screen
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 
 import android.app.Activity.RESULT_OK
 import android.content.Context
@@ -182,7 +184,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                 onSearchTextChange = { viewModel.search = it },
                 onClearClick = { viewModel.search = "" },
                 actionsContent = {
-                    IconButton(
+                    GlassIconButton(
                         onClick = { navigator.navigate(ModuleRepoScreenDestination) }
                     ) {
                         Icon(
@@ -192,7 +194,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                     }
 
                     if (!hideInstallButton) {
-                        IconButton(
+                        GlassIconButton(
                             onClick = {
                                 val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                                     type = "application/zip"
@@ -210,7 +212,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                 },
                 dropdownContent = {
                     var showDropdown by remember { mutableStateOf(false) }
-                    IconButton(
+                    GlassIconButton(
                         onClick = { showDropdown = true },
                     ) {
                         Icon(
@@ -863,7 +865,7 @@ fun ModuleItem(
             Dialog(
                 onDismissRequest = { showMenu = false }
             ) {
-                Card(
+                GlassCard(
                     modifier = Modifier.fillMaxWidth(0.95f),
                 ) {
                     Column(modifier = Modifier.padding(24.dp)) {
@@ -883,7 +885,7 @@ fun ModuleItem(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             if (module.hasWebUi) {
-                                FilledTonalButton(
+                                GlassFilledTonalButton(
                                     modifier = Modifier.fillMaxWidth(),
                                     onClick = {
                                         showMenu = false
@@ -908,7 +910,7 @@ fun ModuleItem(
                             }
 
                             if (module.hasActionScript) {
-                                FilledTonalButton(
+                                GlassFilledTonalButton(
                                     modifier = Modifier.fillMaxWidth(),
                                     onClick = {
                                         showMenu = false
@@ -937,7 +939,7 @@ fun ModuleItem(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End
                         ) {
-                            TextButton(onClick = { showMenu = false }) {
+                            GlassTextButton(onClick = { showMenu = false }) {
                                 Text(stringResource(R.string.cancel))
                             }
                         }
@@ -947,7 +949,7 @@ fun ModuleItem(
         }
     }
 
-    Card(
+    GlassCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.medium)
@@ -1257,7 +1259,7 @@ fun ModuleItem(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             if (module.hasActionScript) {
-                                FilledTonalButton(
+                                GlassFilledTonalButton(
                                     modifier = Modifier.defaultMinSize(52.dp, 32.dp),
                                     enabled = !module.remove && module.enabled && filterZygiskModules,
                                     onClick = {
@@ -1285,7 +1287,7 @@ fun ModuleItem(
                             }
 
                             if (module.hasWebUi) {
-                                FilledTonalButton(
+                                GlassFilledTonalButton(
                                     modifier = Modifier.defaultMinSize(52.dp, 32.dp),
                                     enabled = !module.remove && module.enabled && filterZygiskModules,
                                     onClick = { onClick(module) },
@@ -1313,7 +1315,7 @@ fun ModuleItem(
                             if (module.donate.isNotEmpty()) {
                                 val donateUrl = module.donate
                                 val ctx = LocalContext.current
-                                FilledTonalButton(
+                                GlassFilledTonalButton(
                                     modifier = Modifier.defaultMinSize(52.dp, 32.dp),
                                     enabled = !module.remove && module.enabled && filterZygiskModules,
                                     onClick = {
@@ -1345,7 +1347,7 @@ fun ModuleItem(
                             Spacer(modifier = Modifier.weight(1f, true))
 
                             if (updateUrl.isNotEmpty() && !module.remove && !module.update) {
-                                Button(
+                                GlassButton(
                                     modifier = Modifier.defaultMinSize(52.dp, 32.dp),
                                     enabled = !module.remove,
                                     onClick = { onUpdate(module) },
@@ -1371,7 +1373,7 @@ fun ModuleItem(
                             }
 
                             if (module.remove) {
-                                FilledTonalButton(
+                                GlassFilledTonalButton(
                                     modifier = Modifier.defaultMinSize(52.dp, 32.dp),
                                     onClick = { onRestore(module) },
                                     contentPadding = ButtonDefaults.TextButtonContentPadding
@@ -1391,7 +1393,7 @@ fun ModuleItem(
                                     }
                                 }
                             } else {
-                                FilledTonalButton(
+                                GlassFilledTonalButton(
                                     modifier = Modifier.defaultMinSize(52.dp, 32.dp),
                                     enabled = true,
                                     onClick = { onUninstall(module) },

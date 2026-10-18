@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.screen
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
@@ -327,7 +329,7 @@ fun ModuleRepoScreen(navigator: DestinationsNavigator) {
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
                                 )
-                                IconButton(
+                                GlassIconButton(
                                     onClick = {
                                         editingIndex = index
                                         pendingUrl = url
@@ -337,7 +339,7 @@ fun ModuleRepoScreen(navigator: DestinationsNavigator) {
                                     Icon(Icons.Default.Edit, contentDescription = "Edit")
                                 }
                                 // Prevent deletion of the last remaining repo
-                                IconButton(
+                                GlassIconButton(
                                     onClick = {
                                         val updated = jsonUrls.toMutableList().also { it.removeAt(index) }
                                         jsonUrls = updated
@@ -356,7 +358,7 @@ fun ModuleRepoScreen(navigator: DestinationsNavigator) {
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    OutlinedButton(
+                    GlassOutlinedButton(
                         onClick = {
                             editingIndex = null
                             pendingUrl = ""
@@ -369,7 +371,7 @@ fun ModuleRepoScreen(navigator: DestinationsNavigator) {
                         Text(stringResource(R.string.add_repository))
                     }
 
-                    TextButton(
+                    GlassTextButton(
                         onClick = {
                             jsonUrls = listOf(DEFAULT_JSON_URL)
                             saveJsonUrls(context, listOf(DEFAULT_JSON_URL))
@@ -381,7 +383,7 @@ fun ModuleRepoScreen(navigator: DestinationsNavigator) {
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showRepoManagerDialog = false }) {
+                GlassTextButton(onClick = { showRepoManagerDialog = false }) {
                     Text(stringResource(R.string.close))
                 }
             }
@@ -413,7 +415,7 @@ fun ModuleRepoScreen(navigator: DestinationsNavigator) {
                 }
             },
             confirmButton = {
-                TextButton(
+                GlassTextButton(
                     onClick = {
                         val trimmed = pendingUrl.trim()
                         if (trimmed.isNotBlank()) {
@@ -431,7 +433,7 @@ fun ModuleRepoScreen(navigator: DestinationsNavigator) {
                 }
             },
             dismissButton = {
-                TextButton(
+                GlassTextButton(
                     onClick = {
                         showAddEditDialog = false
                         pendingUrl = ""
@@ -458,13 +460,13 @@ fun ModuleRepoScreen(navigator: DestinationsNavigator) {
                 onClearClick = { searchText = "" },
                 onBackClick = dropUnlessResumed { navigator.popBackStack() },
                 actionsContent = {
-                    IconButton(onClick = { showRepoManagerDialog = true }) {
+                    GlassIconButton(onClick = { showRepoManagerDialog = true }) {
                         Icon(
                             imageVector = Icons.Filled.Edit,
                             contentDescription = "Manage Repositories"
                         )
                     }
-                    IconButton(onClick = { navigator.navigate(MetaModuleScreenDestination) }) {
+                    GlassIconButton(onClick = { navigator.navigate(MetaModuleScreenDestination) }) {
                         Icon(
                             imageVector = Icons.Filled.SettingsSuggest,
                             contentDescription = stringResource(id = R.string.module_repo_screen)
@@ -473,7 +475,7 @@ fun ModuleRepoScreen(navigator: DestinationsNavigator) {
                 },
                 dropdownContent = {
                     var showDropdown by remember { mutableStateOf(false) }
-                    IconButton(
+                    GlassIconButton(
                         onClick = { showDropdown = true },
                     ) {
                         Icon(
@@ -682,7 +684,7 @@ fun ModuleRepoScreen(navigator: DestinationsNavigator) {
                             text = stringResource(R.string.error_loading_modules),
                             style = MaterialTheme.typography.titleMedium
                         )
-                        Button(
+                        GlassButton(
                             onClick = {
                                 scope.launch {
                                     moduleState = ModuleRepoState.Loading
@@ -709,7 +711,7 @@ private fun ModuleRepoCard(
     onDownload: (ModuleRepo) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    GlassCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onCardClick() }
@@ -875,7 +877,7 @@ private fun ModuleRepoCard(
                         )
                     }
 
-                    Button(
+                    GlassButton(
                         onClick = { onDownload(module) },
                         modifier = Modifier.defaultMinSize(52.dp, 32.dp),
                         enabled = module.downloadUrl.isNotEmpty() && isInstallEnabled,
@@ -926,15 +928,15 @@ private fun TopBar(
             )
         },
         navigationIcon = {
-            IconButton(onClick = onBack) {
+            GlassIconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
             }
         },
         actions = {
-            IconButton(onClick = onManageRepos) {
+            GlassIconButton(onClick = onManageRepos) {
                 Icon(Icons.Filled.Edit, contentDescription = "Manage Repositories")
             }
-            IconButton(onClick = onMetaModuleClick) {
+            GlassIconButton(onClick = onMetaModuleClick) {
                 Icon(Icons.Filled.SettingsSuggest, contentDescription = stringResource(id = R.string.module_repo_screen))
             }
         },

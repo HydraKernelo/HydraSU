@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.screen
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import android.app.Activity
 import android.content.Context
 import android.net.Uri
@@ -511,13 +513,13 @@ private fun TopBar(
             )
         },
         navigationIcon = {
-            IconButton(
+            GlassIconButton(
                 onClick = { if (status != FlashingStatus.FLASHING) onBack() },
                 enabled = status != FlashingStatus.FLASHING
             ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
         },
         actions = {
-            IconButton(
+            GlassIconButton(
                 onClick = { if (status != FlashingStatus.FLASHING) onSave() },
                 enabled = status != FlashingStatus.FLASHING
             ) {

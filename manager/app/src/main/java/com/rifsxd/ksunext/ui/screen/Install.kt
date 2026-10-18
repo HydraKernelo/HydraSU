@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.screen
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
@@ -249,7 +251,7 @@ fun InstallScreen(navigator: DestinationsNavigator) {
                         )
                     )
                 }
-                Button(modifier = Modifier.fillMaxWidth(),
+                GlassButton(modifier = Modifier.fillMaxWidth(),
                     enabled = installMethod != null,
                     onClick = {
                         onClickNext()
@@ -473,12 +475,12 @@ private fun TopBar(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Black,
             ) }, navigationIcon = {
-            IconButton(
+            GlassIconButton(
                 onClick = onBack
             ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
         }, actions = {
             onLkmUpload?.let { action ->
-                IconButton(onClick = action) {
+                GlassIconButton(onClick = action) {
                     Icon(Icons.Filled.FileUpload, contentDescription = null)
                 }
             }

@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.screen
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -89,7 +91,7 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
                 onSearchTextChange = { viewModel.search = it },
                 onClearClick = { viewModel.search = "" },
                 actionsContent = {
-                    IconButton(onClick = { navigator.navigate(SulogScreenDestination) }) {
+                    GlassIconButton(onClick = { navigator.navigate(SulogScreenDestination) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Article,
                             contentDescription = stringResource(R.string.settings_sulog)
@@ -99,7 +101,7 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
                 dropdownContent = {
                     var showDropdown by remember { mutableStateOf(false) }
 
-                    IconButton(
+                    GlassIconButton(
                         onClick = { showDropdown = true },
                     ) {
                         Icon(
@@ -197,7 +199,7 @@ private fun AppItem(
     val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     val developerOptionsEnabled = prefs.getBoolean("enable_developer_options", false)
 
-    Card(
+    GlassCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.medium)

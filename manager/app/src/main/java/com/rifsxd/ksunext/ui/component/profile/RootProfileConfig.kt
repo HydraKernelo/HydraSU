@@ -1,5 +1,7 @@
 package com.rifsxd.ksunext.ui.component.profile
 
+import com.rifsxd.ksunext.ui.component.liquid.*
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
@@ -224,7 +226,7 @@ fun GroupsPanel(selected: List<Groups>, closeSelection: (selection: Set<Groups>)
         )
     }
 
-    OutlinedCard(
+    GlassCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
@@ -295,7 +297,7 @@ fun CapsPanel(
         )
     }
 
-    OutlinedCard(
+    GlassCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
@@ -364,7 +366,7 @@ private fun RootProfileFlagPanel(
         )
     }
 
-    OutlinedCard(
+    GlassCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
